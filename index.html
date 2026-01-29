@@ -191,7 +191,7 @@
     let toastInstance;
     let debugLines = [];
 
-    const SOURCES = ['усього', 'Сайт', 'Пром', 'Фейсбук', 'Дзвінок', 'Особисті контакти', 'соцмережі', 'Інше'];
+    const DEFAULT_SOURCES = ['усього'];
 
     window.onload = async function () {
       toastInstance = new bootstrap.Toast(document.getElementById('liveToast'), { delay: 3000 });
@@ -202,7 +202,7 @@
       }
 
       buildRangeTabs();
-      buildSourceFilter();
+      buildSourceFilter(DEFAULT_SOURCES);
 
       await fetchAccess();
     };
@@ -239,7 +239,7 @@
     function buildRangeTabs() {
       const tabs = document.getElementById('rangeTabs');
       tabs.innerHTML = `
-        <li class="nav-item"><a class="nav-link active" onclick="setRange('day', this)">За день</a></li>
+        <li class="nav-item"><a class="nav-link active" onclick="setRange('day', this)">За вчора</a></li>
         <li class="nav-item"><a class="nav-link" onclick="setRange('week', this)">Тиждень</a></li>
         <li class="nav-item"><a class="nav-link" onclick="setRange('month', this)">Місяць</a></li>
       `;
@@ -252,9 +252,10 @@
       loadStats();
     }
 
-    function buildSourceFilter() {
+    function buildSourceFilter(list) {
       const select = document.getElementById('sourceFilter');
-      select.innerHTML = SOURCES.map(s => `<option value="${s}">${s}</option>`).join('');
+      const sources = (list && list.length) ? list : DEFAULT_SOURCES;
+      select.innerHTML = sources.map(s => `<option value="${s}">${s}</option>`).join('');
     }
 
     function buildManagerFilter(show) {
@@ -298,6 +299,13 @@
           showDebug();
         }
 
+        const sourceList = (res.breakdowns && res.breakdowns.sources || []).map(r => r.source);
+        if (sourceList.length) {
+          const current = document.getElementById('sourceFilter').value || 'усього';
+          buildSourceFilter(sourceList);
+          document.getElementById('sourceFilter').value = sourceList.includes(current) ? current : 'усього';
+        }
+
         if (ACCESS.role === 'Керівник') {
           hydrateManagerFilter(res);
         }
@@ -327,7 +335,7 @@
       const metrics = data.metrics || {};
       const rangeLabel = (data.range && data.range.label) ? data.range.label : '';
 
-      const cards = buildMetricCards(metrics, rangeLabel);
+      const cards = buildMetricCards(metrics, rangeLabel, data.planSeries);
       const sourcesTable = buildSourcesTable(data.breakdowns ? data.breakdowns.sources : []);
       const managersTable = buildManagersTable(data.breakdowns ? data.breakdowns.managers : []);
 
@@ -358,21 +366,22 @@
       `;
     }
 
-    function buildMetricCards(metrics, rangeLabel) {
+    function buildMetricCards(metrics, rangeLabel, planSeries) {
       const cards = [
         metricCard('Відвідувачі', `${formatNumber(metrics.visitors?.total)}`, `Нові: ${formatNumber(metrics.visitors?.newUsers)} · Поверн.: ${formatNumber(metrics.visitors?.returning)}`),
-        metricCard('Ліди', `${formatNumber(metrics.leads?.total)}`, `Успішні: ${formatNumber(metrics.leads?.success)}`),
+        metricCard('Оброблені ліди', `${formatNumber(metrics.processedLeads?.total)}`, `Успішні: ${formatNumber(metrics.processedLeads?.success)}`),
         metricCard('Товари', `${formatNumber(metrics.products?.count)}`, `Сума: ${formatMoney(metrics.products?.sum)}`),
         metricCard('Чуйки', `${formatNumber(metrics.chuyka?.count)}`, `Сума: ${formatMoney(metrics.chuyka?.sum)}`),
         metricCard('Закриті замовлення', `${formatNumber(metrics.closed?.count)}`, `Сума: ${formatMoney(metrics.closed?.sum)}`),
-        metricCard('Допродажі', `${formatNumber(metrics.upsell?.count)}`, `Сума: ${formatMoney(metrics.upsell?.sum)}`),
+        metricCard('Чуйки в закритих', `${formatNumber(metrics.closedChuyka?.count)}`, `Сума: ${formatMoney(metrics.closedChuyka?.sum)}`),
         metricCard('Конверсія', `${formatPercent(metrics.conversion?.leadToContact)} → ${formatPercent(metrics.conversion?.contactToOrder)}`, `Lead→Order: ${formatPercent(metrics.conversion?.leadToOrder)}`),
         metricCard('Середній чек', `${formatMoney(metrics.avgCheck)}`, `за день`),
         metricCard('План/місяць', `${formatMoney(metrics.plan?.value)}`, `% виконання: ${formatPercent(metrics.plan?.percent)}`),
-        metricCard('ВВ від закритих', `${formatPercent(metrics.vvShare)}`, `частка у сумі`)
+        metricCard('ВВ від закритих', `${formatPercent(metrics.vvShare)}`, `частка у сумі`),
+        planSeries ? planChartCard(planSeries) : ''
       ];
 
-      return cards.join('');
+      return cards.filter(Boolean).join('');
     }
 
     function metricCard(title, value, subtitle) {
@@ -383,6 +392,47 @@
             <div class="metric-value">${value}</div>
             <div class="metric-sub">${subtitle || ''}</div>
           </div>
+        </div>
+      `;
+    }
+
+    function planChartCard(series) {
+      const chart = renderPlanChart(series);
+      return `
+        <div class="col-12">
+          <div class="card p-3 h-100">
+            <div class="metric-label">План vs факт (накопичувально)</div>
+            <div class="small text-muted mb-2">Місяць: ${series.month}</div>
+            ${chart}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPlanChart(series) {
+      if (!series || !series.days || !series.days.length) {
+        return '<div class="text-muted small">Немає даних</div>';
+      }
+      const width = 600;
+      const height = 140;
+      const padding = 16;
+      const max = Math.max(...series.plan, ...series.fact, 1);
+
+      const points = (arr) => arr.map((v, i) => {
+        const x = padding + (i / (arr.length - 1 || 1)) * (width - padding * 2);
+        const y = height - padding - (v / max) * (height - padding * 2);
+        return `${x},${y}`;
+      }).join(' ');
+
+      return `
+        <svg viewBox="0 0 ${width} ${height}" width="100%" height="140" aria-label="Plan vs Fact chart">
+          <rect x="0" y="0" width="${width}" height="${height}" fill="#f8f9fa" rx="12"></rect>
+          <polyline fill="none" stroke="#0d6efd" stroke-width="2" points="${points(series.plan)}"></polyline>
+          <polyline fill="none" stroke="#198754" stroke-width="2" points="${points(series.fact)}"></polyline>
+        </svg>
+        <div class="d-flex justify-content-between mt-2 small text-muted">
+          <div><span class="badge text-bg-primary">План</span></div>
+          <div><span class="badge text-bg-success">Факт</span></div>
         </div>
       `;
     }
