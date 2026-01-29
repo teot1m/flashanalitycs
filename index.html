@@ -298,6 +298,10 @@
           pushDebug(res.debug.join('\n'));
           showDebug();
         }
+        if (DEBUG && res.cache) {
+          pushDebug('Cache: ' + (res.cache.hit ? 'HIT' : 'MISS') + ' ' + res.cache.key);
+          showDebug();
+        }
 
         const sourceList = (res.breakdowns && res.breakdowns.sources || []).map(r => r.source);
         if (sourceList.length) {
