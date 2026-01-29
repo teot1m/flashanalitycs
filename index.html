@@ -110,6 +110,15 @@
     .table tbody td {
       vertical-align: middle;
     }
+
+    .table th,
+    .table td {
+      padding: 0.6rem 0.75rem;
+    }
+
+    .row.g-metrics {
+      row-gap: 12px;
+    }
   </style>
 </head>
 
@@ -357,7 +366,7 @@
           </div>
         </div>
 
-        <div class="row g-2">
+        <div class="row g-2 g-metrics">
           ${cards}
         </div>
 
@@ -379,8 +388,8 @@
         metricCard('Закриті замовлення', `${formatNumber(metrics.closed?.count)}`, `Сума: ${formatMoney(metrics.closed?.sum)}`),
         metricCard('Чуйки в закритих', `${formatNumber(metrics.closedChuyka?.count)}`, `Сума: ${formatMoney(metrics.closedChuyka?.sum)}`),
         metricCard('Конверсія', `${formatPercent(metrics.conversion?.leadToContact)} → ${formatPercent(metrics.conversion?.contactToOrder)}`, `Lead→Order: ${formatPercent(metrics.conversion?.leadToOrder)}`),
-        metricCard('Середній чек', `${formatMoney(metrics.avgCheck)}`, `за день`),
-        metricCard('План/місяць', `${formatMoney(metrics.plan?.value)}`, `% виконання: ${formatPercent(metrics.plan?.percent)}`),
+        metricCard('Середній чек', `${formatMoney(metrics.avgCheck)}`, `Оплата: ${formatMoney(metrics.avgCheck)} · Товар: ${formatMoney(metrics.avgCheckByItems)}`),
+        metricCard('План/період', `${formatMoney(metrics.plan?.value)}`, `% виконання: ${formatPercent(metrics.plan?.percent)}`),
         metricCard('ВВ від закритих', `${formatPercent(metrics.vvShare)}`, `частка у сумі`),
         planSeries ? planChartCard(planSeries) : ''
       ];
@@ -406,7 +415,7 @@
         <div class="col-12">
           <div class="card p-3 h-100">
             <div class="metric-label">План vs факт (накопичувально)</div>
-            <div class="small text-muted mb-2">Місяць: ${series.month}</div>
+            <div class="small text-muted mb-2">Період: ${series.range}</div>
             ${chart}
           </div>
         </div>
