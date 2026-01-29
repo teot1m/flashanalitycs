@@ -1,0 +1,8 @@
+# Ignore everything by default
+*
+
+# Allow Git metadata and this ignore file
+!.gitignore
+
+# Allow only the front-end file for GitHub Pages
+!index.html
