@@ -171,6 +171,7 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const USER_ID = urlParams.get('userid');
+    const DEBUG = urlParams.get('debug') === '1';
 
     let USER_NAME = "";
     let USER_ROLE = "";
@@ -217,6 +218,7 @@
         loadStats();
       } catch (e) {
         showToast('Помилка доступу: ' + e.message);
+        if (DEBUG) console.error('Access error', e);
       }
     }
 
@@ -276,6 +278,10 @@
           throw new Error(res.error);
         }
 
+        if (DEBUG && res.debug) {
+          console.log('Backend debug:', res.debug);
+        }
+
         if (ACCESS.role === 'Керівник') {
           hydrateManagerFilter(res);
         }
@@ -284,6 +290,7 @@
       } catch (e) {
         document.getElementById('appContent').innerHTML = '<div class="alert alert-danger text-center">Не вдалося завантажити дані</div>';
         showToast('Помилка: ' + e.message);
+        if (DEBUG) console.error('Stats error', e);
       }
     }
 
@@ -435,6 +442,7 @@
     }
 
     async function apiGet(params) {
+      if (DEBUG) params.debug = '1';
       const query = new URLSearchParams(params).toString();
       const res = await fetch(`${API_URL}?${query}`);
       return await res.json();
