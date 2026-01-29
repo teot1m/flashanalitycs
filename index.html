@@ -119,6 +119,19 @@
     .row.g-metrics {
       row-gap: 12px;
     }
+
+    .range-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .range-bar {
+      height: 6px;
+      background: linear-gradient(90deg, #e9ecef 0%, #dbe4ff 50%, #e9ecef 100%);
+      border-radius: 999px;
+      margin-top: 6px;
+    }
   </style>
 </head>
 
@@ -150,6 +163,17 @@
         <div class="col-12 col-md-6" id="managerFilterBlock">
           <label class="small text-muted fw-bold">Менеджер</label>
           <select class="form-select" id="managerFilter" onchange="loadStats()"></select>
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="small text-muted fw-bold">Період (від / до)</label>
+          <div class="range-inputs">
+            <input type="date" class="form-control" id="dateFrom" onchange="applyCustomRange()">
+            <input type="date" class="form-control" id="dateTo" onchange="applyCustomRange()">
+          </div>
+          <div class="range-bar"></div>
+        </div>
+        <div class="col-12 col-md-6 d-flex align-items-end">
+          <div class="small text-muted" id="rangeLabel">Період: —</div>
         </div>
       </div>
     </div>
@@ -212,6 +236,7 @@
 
       buildRangeTabs();
       buildSourceFilter(DEFAULT_SOURCES);
+      setDateInputsForRange('day');
 
       await fetchAccess();
     };
@@ -258,6 +283,7 @@
       CURRENT_RANGE = rangeKey;
       document.querySelectorAll('#rangeTabs .nav-link').forEach(l => l.classList.remove('active'));
       if (el) el.classList.add('active');
+      setDateInputsForRange(rangeKey);
       loadStats();
     }
 
@@ -265,6 +291,40 @@
       const select = document.getElementById('sourceFilter');
       const sources = (list && list.length) ? list : DEFAULT_SOURCES;
       select.innerHTML = sources.map(s => `<option value="${s}">${s}</option>`).join('');
+    }
+
+    function setDateInputsForRange(rangeKey) {
+      const from = document.getElementById('dateFrom');
+      const to = document.getElementById('dateTo');
+      const today = new Date();
+      const yyyyMmDd = (d) => d.toISOString().split('T')[0];
+
+      if (rangeKey === 'day') {
+        const y = new Date(today);
+        y.setDate(y.getDate() - 1);
+        from.value = yyyyMmDd(y);
+        to.value = yyyyMmDd(y);
+      } else if (rangeKey === 'week') {
+        const d = new Date(today);
+        const day = d.getDay();
+        const diff = day === 0 ? 6 : day - 1;
+        d.setDate(d.getDate() - diff);
+        from.value = yyyyMmDd(d);
+        to.value = yyyyMmDd(today);
+      } else if (rangeKey === 'month') {
+        const d = new Date(today.getFullYear(), today.getMonth(), 1);
+        from.value = yyyyMmDd(d);
+        to.value = yyyyMmDd(today);
+      }
+    }
+
+    function applyCustomRange() {
+      const from = document.getElementById('dateFrom').value;
+      const to = document.getElementById('dateTo').value;
+      if (!from || !to) return;
+      CURRENT_RANGE = 'custom';
+      document.querySelectorAll('#rangeTabs .nav-link').forEach(l => l.classList.remove('active'));
+      loadStats();
     }
 
     function buildManagerFilter(show) {
@@ -295,7 +355,9 @@
           userId: USER_ID,
           range: CURRENT_RANGE,
           source: source,
-          manager: manager
+          manager: manager,
+          start: document.getElementById('dateFrom').value || '',
+          end: document.getElementById('dateTo').value || ''
         });
 
         if (res.error) {
@@ -324,6 +386,7 @@
         }
 
         renderDashboard(res);
+        document.getElementById('rangeLabel').textContent = 'Період: ' + (res.range && res.range.label ? res.range.label : '—');
       } catch (e) {
         document.getElementById('appContent').innerHTML = '<div class="alert alert-danger text-center">Не вдалося завантажити дані</div>';
         showToast('Помилка: ' + e.message);
@@ -351,21 +414,10 @@
       const cards = buildMetricCards(metrics, rangeLabel, data.planSeries);
       const sourcesTable = buildSourcesTable(data.breakdowns ? data.breakdowns.sources : []);
       const managersTable = buildManagersTable(data.breakdowns ? data.breakdowns.managers : []);
+      const ga4Table = buildGa4Table(data.ga4Rows || []);
+      const dailyTable = buildDailyTable(data.dailyRows || []);
 
       document.getElementById('appContent').innerHTML = `
-        <div class="card p-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <div class="metric-label">Період</div>
-              <div class="fw-bold">${rangeLabel}</div>
-            </div>
-            <div class="text-end">
-              <div class="metric-label">Фільтри</div>
-              <div class="small text-muted">${data.managerFilter || 'усього'} · ${data.sourceFilter || 'усього'}</div>
-            </div>
-          </div>
-        </div>
-
         <div class="row g-2 g-metrics">
           ${cards}
         </div>
@@ -373,6 +425,16 @@
         <div class="card p-3">
           <div class="fw-bold mb-2">По джерелам</div>
           ${sourcesTable}
+        </div>
+
+        <div class="card p-3">
+          <div class="fw-bold mb-2">GA4 по джерелам</div>
+          ${ga4Table}
+        </div>
+
+        <div class="card p-3">
+          <div class="fw-bold mb-2">Щоденна статистика</div>
+          ${dailyTable}
         </div>
 
         ${managersTable}
@@ -383,6 +445,7 @@
       const cards = [
         metricCard('Відвідувачі', `${formatNumber(metrics.visitors?.total)}`, `Нові: ${formatNumber(metrics.visitors?.newUsers)} · Поверн.: ${formatNumber(metrics.visitors?.returning)}`),
         metricCard('Оброблені ліди', `${formatNumber(metrics.processedLeads?.total)}`, `Успішні: ${formatNumber(metrics.processedLeads?.success)}`),
+        metricCard('Товари в лідах', `${formatNumber(metrics.leadItems?.count)}`, `Сума: ${formatMoney(metrics.leadItems?.sum)}`),
         metricCard('Товари', `${formatNumber(metrics.products?.count)}`, `Сума: ${formatMoney(metrics.products?.sum)}`),
         metricCard('Чуйки', `${formatNumber(metrics.chuyka?.count)}`, `Сума: ${formatMoney(metrics.chuyka?.sum)}`),
         metricCard('Закриті замовлення', `${formatNumber(metrics.closed?.count)}`, `Сума: ${formatMoney(metrics.closed?.sum)}`),
@@ -459,7 +522,6 @@
         return `
           <tr>
             <td class="fw-bold">${r.source}</td>
-            <td>${formatNumber(m.visitors?.total)}</td>
             <td>${formatNumber(m.leads?.total)}</td>
             <td>${formatNumber(m.closed?.count)}</td>
             <td>${formatMoney(m.closed?.sum)}</td>
@@ -473,10 +535,89 @@
             <thead>
               <tr>
                 <th>Джерело</th>
-                <th>Відвідувачі</th>
                 <th>Ліди</th>
                 <th>Замовлення</th>
                 <th>Сума</th>
+              </tr>
+            </thead>
+            <tbody>${tbody}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function buildGa4Table(rows) {
+      if (!rows || !rows.length) return '<div class="text-muted">Немає даних</div>';
+      const tbody = rows.map(r => `
+        <tr>
+          <td class="fw-bold">${formatDate(r.date)}</td>
+          <td>${r.source || '-'}</td>
+          <td>${formatNumber(r.total)}</td>
+          <td>${formatNumber(r.newUsers)}</td>
+          <td>${formatNumber(r.returning)}</td>
+          <td>${formatNumber(r.impressions)}</td>
+          <td>${formatNumber(r.engagedPerUser)}</td>
+          <td>${formatNumber(r.events)}</td>
+          <td>${formatNumber(r.keyEvents)}</td>
+          <td>${formatNumber(r.keyShare)}</td>
+        </tr>
+      `).join('');
+
+      return `
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Источник</th>
+                <th>Всего пользователей</th>
+                <th>Новые пользователи</th>
+                <th>Вернувшиеся пользователи</th>
+                <th>Показы</th>
+                <th>Сеансы/польз.</th>
+                <th>События</th>
+                <th>Ключевые</th>
+                <th>Доля ключевых (%)</th>
+              </tr>
+            </thead>
+            <tbody>${tbody}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function buildDailyTable(rows) {
+      if (!rows || !rows.length) return '<div class="text-muted">Немає даних</div>';
+      const tbody = rows.map(r => `
+        <tr>
+          <td class="fw-bold">${r.date}</td>
+          <td>${formatNumber(r.leads)}</td>
+          <td>${formatNumber(r.leadsSuccess)}</td>
+          <td>${formatNumber(r.leadItems)}</td>
+          <td>${formatMoney(r.leadItemsSum)}</td>
+          <td>${formatNumber(r.orders)}</td>
+          <td>${formatNumber(r.orderItems)}</td>
+          <td>${formatMoney(r.orderItemsSum)}</td>
+          <td>${formatNumber(r.closedOrders)}</td>
+          <td>${formatMoney(r.closedSum)}</td>
+        </tr>
+      `).join('');
+
+      return `
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Ліди</th>
+                <th>Успішні</th>
+                <th>Товари в лідах</th>
+                <th>Сума в лідах</th>
+                <th>Замовлення</th>
+                <th>Товари в замовл.</th>
+                <th>Сума в замовл.</th>
+                <th>Закриті</th>
+                <th>Сума закритих</th>
               </tr>
             </thead>
             <tbody>${tbody}</tbody>
@@ -544,6 +685,17 @@
     function formatPercent(value) {
       const num = Number(value) || 0;
       return (num * 100).toFixed(1) + '%';
+    }
+
+    function formatDate(value) {
+      if (!value) return '';
+      try {
+        const d = new Date(value);
+        if (isNaN(d.getTime())) return String(value);
+        return d.toLocaleDateString('uk-UA');
+      } catch (e) {
+        return String(value);
+      }
     }
 
     function showToast(msg) {
