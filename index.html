@@ -450,6 +450,7 @@
         metricCard('Чуйки', `${formatNumber(metrics.chuyka?.count)}`, `Сума: ${formatMoney(metrics.chuyka?.sum)}`),
         metricCard('Закриті замовлення', `${formatNumber(metrics.closed?.count)}`, `Сума: ${formatMoney(metrics.closed?.sum)}`),
         metricCard('Чуйки в закритих', `${formatNumber(metrics.closedChuyka?.count)}`, `Сума: ${formatMoney(metrics.closedChuyka?.sum)}`),
+        metricCard('Допродажі', `${formatNumber(metrics.upsell?.count)}`, `Сума: ${formatMoney(metrics.upsell?.sum)}`),
         metricCard('Конверсія', `${formatPercent(metrics.conversion?.leadToContact)} → ${formatPercent(metrics.conversion?.contactToOrder)}`, `Lead→Order: ${formatPercent(metrics.conversion?.leadToOrder)}`),
         metricCard('Середній чек', `${formatMoney(metrics.avgCheck)}`, `Оплата: ${formatMoney(metrics.avgCheck)} · Товар: ${formatMoney(metrics.avgCheckByItems)}`),
         metricCard('План/період', `${formatMoney(metrics.plan?.value)}`, `% виконання: ${formatPercent(metrics.plan?.percent)}`),
@@ -591,8 +592,8 @@
       const tbody = rows.map(r => `
         <tr>
           <td class="fw-bold">${r.date}</td>
-          <td>${formatNumber(r.leads)}</td>
-          <td>${formatNumber(r.leadsSuccess)}</td>
+          <td>${formatNumber(r.processedLeads)}</td>
+          <td>${formatNumber(r.processedSuccess)}</td>
           <td>${formatNumber(r.leadItems)}</td>
           <td>${formatMoney(r.leadItemsSum)}</td>
           <td>${formatNumber(r.orders)}</td>
@@ -609,7 +610,7 @@
             <thead>
               <tr>
                 <th>Дата</th>
-                <th>Ліди</th>
+                <th>Оброблені ліди</th>
                 <th>Успішні</th>
                 <th>Товари в лідах</th>
                 <th>Сума в лідах</th>
