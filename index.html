@@ -1923,7 +1923,7 @@
       }
     }
 
-    function submitRegistration() {
+    async function submitRegistration() {
       const select = document.getElementById('registerManager');
       if (!select || !select.value) {
         showToast('Оберіть менеджера зі списку.');
@@ -1936,41 +1936,37 @@
         return;
       }
       const payload = { manager: select.value, userId: USER_ID || '' };
+      const hint = document.getElementById('registerHint');
+      if (hint) hint.textContent = 'Відправляємо заявку...';
+
+      let res = null;
+      try {
+        res = await apiGet({ action: 'register', userId: USER_ID || '', manager: select.value });
+      } catch (e) {
+        showToast('Помилка відправки. Перевірте доступ до API.');
+        if (hint) hint.textContent = 'Помилка відправки. Перевірте доступ до API.';
+        return;
+      }
+
+      if (res && res.ok) {
+        showToast('Заявка відправлена.');
+        if (hint) hint.textContent = 'Заявка відправлена. Очікуйте підтвердження.';
+        const btn = document.getElementById('registerSubmit');
+        if (btn) btn.disabled = true;
+      } else {
+        const err = res && res.error ? res.error : 'невідомо';
+        showToast('Помилка: ' + err);
+        if (hint) hint.textContent = 'Помилка: ' + err;
+      }
+
       if (window.Telegram && window.Telegram.WebApp) {
         try {
           window.Telegram.WebApp.ready();
-        } catch (e) {
-          // ignore
-        }
-        window.Telegram.WebApp.sendData(JSON.stringify(payload));
-        apiGet({ action: 'register', userId: USER_ID || '', manager: select.value })
-          .then(() => {})
-          .catch(() => {});
-        const hint = document.getElementById('registerHint');
-        if (hint) hint.textContent = 'Дані відправлено. Очікуйте підтвердження.';
-        const btn = document.getElementById('registerSubmit');
-        if (btn) btn.disabled = true;
-        try {
+          window.Telegram.WebApp.sendData(JSON.stringify(payload));
           window.Telegram.WebApp.close();
         } catch (e) {
           // ignore
         }
-      } else {
-        apiGet({ action: 'register', userId: USER_ID || '', manager: select.value })
-          .then((res) => {
-            if (res && res.ok) {
-              showToast('Заявка відправлена.');
-              const hint = document.getElementById('registerHint');
-              if (hint) hint.textContent = 'Заявка відправлена. Очікуйте підтвердження.';
-              const btn = document.getElementById('registerSubmit');
-              if (btn) btn.disabled = true;
-            } else {
-              showToast('Помилка: ' + (res && res.error ? res.error : 'невідомо'));
-            }
-          })
-          .catch(() => {
-            showToast('Помилка відправки. Спробуйте з Telegram.');
-          });
       }
     }
 
