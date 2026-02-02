@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 
 <head>
   <meta charset="utf-8">
@@ -11,198 +11,555 @@
 
   <style>
     :root {
-      --primary-color: #0d6efd;
-      --bg-color: #f0f2f5;
+      --page-bg: #edf2f7;
+      --card-bg: #ffffff;
+      --line: #d8e2ec;
+      --ink: #19232f;
+      --muted: #6f7f90;
+      --brand: #1458d7;
+      --brand-soft: #e7efff;
+      --good: #128a4a;
+      --bad: #d33232;
+      --accent: #ff9f1c;
     }
 
     body {
-      padding: 15px 0px 15px 0px;
-      background-color: var(--bg-color);
-      font-family: -apple-system, system-ui, sans-serif;
-      padding-bottom: 90px;
+      margin: 0;
+      padding: 18px 0 92px;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 540px at 0% -15%, #dbe8ff 0%, transparent 56%),
+        radial-gradient(900px 480px at 100% -20%, #d4f2e8 0%, transparent 52%),
+        var(--page-bg);
+      font-family: "SF Pro Display", "Segoe UI", "Helvetica Neue", sans-serif;
+      overflow-x: hidden;
     }
 
-    input,
-    select,
-    textarea {
-      font-size: 16px !important;
+    .page-shell {
+      max-width: 1220px;
     }
 
-    .card {
-      border-radius: 16px;
-      border: none;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    .panel-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--card-bg);
+      box-shadow: 0 8px 26px rgba(24, 43, 61, 0.06);
+    }
+
+    .topline {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
       margin-bottom: 12px;
-      transition: opacity 0.3s;
     }
 
-    .nav-pills {
+    .role-badge {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 12px;
+      color: #31475f;
       background: #fff;
-      padding: 5px;
-      border-radius: 14px;
-      margin-bottom: 16px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-
-    .nav-pills .nav-link {
-      border-radius: 10px;
-      color: #6c757d;
       font-weight: 600;
-      font-size: 0.9rem;
-      padding: 10px;
     }
 
-    .nav-pills .nav-link.active {
-      background-color: var(--primary-color);
-      color: #fff;
-    }
-
-    .total-box {
-      background: #f8f9fa;
-      border-radius: 12px;
-      padding: 15px;
-      border: 1px dashed #adb5bd;
-    }
-
-    .toast-container {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1060;
-      width: 97%;
-      max-width: 400px;
-    }
-
-    .toast {
-      background: #333;
-      color: #fff;
-      border-radius: 12px;
-    }
-
-    .metric-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      color: #6c757d;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-    }
-
-    .metric-value {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #212529;
-    }
-
-    .metric-sub {
-      font-size: 0.85rem;
-      color: #6c757d;
-    }
-
-    .table thead th {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-      color: #6c757d;
-      border-bottom: none;
-    }
-
-    .table tbody td {
-      vertical-align: middle;
-    }
-
-    .table th,
-    .table td {
-      padding: 0.6rem 0.75rem;
-    }
-
-    .row.g-metrics {
-      row-gap: 12px;
-    }
-
-    .range-inputs {
+    .filter-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1.2fr 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .filters-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filters-toggle {
+      border: 1px solid #c8d7e6;
+      border-radius: 12px;
+      background: #fff;
+      color: #234664;
+      min-height: 42px;
+      padding: 8px 12px;
+      font-weight: 700;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
       gap: 8px;
     }
 
-    .range-bar {
-      height: 6px;
-      background: linear-gradient(90deg, #e9ecef 0%, #dbe4ff 50%, #e9ecef 100%);
+    .field-label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 5px;
+      font-weight: 700;
+    }
+
+    .field-btn,
+    .field-select {
+      border: 1px solid #cfdbe8;
+      border-radius: 12px;
+      min-height: 44px;
+      font-size: 15px;
+      padding: 10px 12px;
+      width: 100%;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .field-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .field-btn:hover {
+      border-color: #9bb5cf;
+    }
+
+    .date-picker-wrap {
+      position: relative;
+    }
+
+    .date-popover {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      width: min(420px, 96vw);
+      z-index: 30;
+      border: 1px solid #c8d6e5;
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 18px 34px rgba(18, 41, 68, 0.18);
+      padding: 12px;
+    }
+
+    .preset-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .preset-btn {
+      border: 1px solid #bfd0e2;
       border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 10px;
+      background: #fff;
+      color: #244b75;
+    }
+
+    .preset-btn.active {
+      background: #deebff;
+      border-color: #8fb4f0;
+      color: #123f73;
+    }
+
+    .calendar-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .calendar-title {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .cal-nav {
+      border: 1px solid #c7d7e7;
+      border-radius: 9px;
+      width: 30px;
+      height: 30px;
+      background: #fff;
+      color: #355675;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      user-select: none;
+    }
+
+    .cal-weekday {
+      text-align: center;
+      font-size: 10px;
+      color: #7f8fa1;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .cal-day {
+      height: 35px;
+      border: 0;
+      border-radius: 9px;
+      font-size: 13px;
+      background: transparent;
+      color: #25374b;
+      position: relative;
+    }
+
+    .cal-day:hover {
+      background: #edf5ff;
+    }
+
+    .cal-day.muted {
+      color: #b8c4d1;
+    }
+
+    .cal-day.start,
+    .cal-day.end {
+      background: var(--brand);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .cal-day.in-range {
+      background: rgba(20, 88, 215, 0.16);
+      border-radius: 0;
+    }
+
+    .cal-day.start.in-range {
+      border-radius: 9px 0 0 9px;
+    }
+
+    .cal-day.end.in-range {
+      border-radius: 0 9px 9px 0;
+    }
+
+    .range-text {
+      font-size: 12px;
+      color: #5d738c;
+      margin: 8px 0;
+      min-height: 16px;
+    }
+
+    .popover-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 10px;
+    }
+
+    .kpi-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: #fff;
+      min-height: 108px;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #6f8093;
+      margin-bottom: 6px;
+      overflow-wrap: anywhere;
+    }
+
+    .kpi-value {
+      font-size: clamp(22px, 2.2vw, 31px);
+      line-height: 1;
+      font-weight: 800;
+      color: #162b46;
+      margin-bottom: 7px;
+      overflow-wrap: anywhere;
+    }
+
+    .kpi-sub {
+      font-size: 12px;
+      color: #71869b;
+      margin-bottom: 2px;
+      overflow-wrap: anywhere;
+    }
+
+    .trend {
+      font-size: 12px;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .metric-band {
+      border: 1px dashed #d7e3ef;
+      border-radius: 12px;
+      padding: 8px;
+      margin-bottom: 10px;
+      background: #fcfdff;
+    }
+
+    .metric-band-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      font-weight: 800;
+      color: #62798f;
+      margin-bottom: 8px;
+    }
+
+    .trend.good {
+      color: var(--good);
+    }
+
+    .trend.bad {
+      color: var(--bad);
+    }
+
+    .trend.neutral {
+      color: #8193a7;
+    }
+
+    .plan-progress {
+      height: 8px;
+      border-radius: 999px;
+      background: #e7edf3;
+      overflow: hidden;
       margin-top: 6px;
+    }
+
+    .plan-progress span {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+    }
+
+    .chart-wrap {
+      border: 1px solid #d6e2ef;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #f9fcff 0%, #f0f6fc 100%);
+      padding: 12px;
+    }
+
+    .chart-legend {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+      font-size: 12px;
+      color: #6f8196;
+      font-weight: 600;
+      flex-wrap: wrap;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      margin-right: 6px;
+      vertical-align: baseline;
+    }
+
+    .section-title {
+      font-size: 14px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #5f7389;
+      font-weight: 800;
+      margin-bottom: 9px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid #d6e2ef;
+      border-radius: 12px;
+    }
+
+    .table {
+      margin-bottom: 0;
+      font-size: 13px;
+    }
+
+    .table thead th {
+      white-space: nowrap;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #5b7087;
+      border-bottom-width: 1px;
+      background: #f6f9fc;
+    }
+
+    .table tbody td {
+      white-space: nowrap;
+      vertical-align: middle;
+      border-color: #ebf1f7;
+    }
+
+    .sticky-first {
+      position: sticky;
+      left: 0;
+      background: #fff;
+      z-index: 1;
+      box-shadow: 8px 0 8px -10px rgba(26, 47, 68, 0.35);
+    }
+
+    details>summary {
+      list-style: none;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    details>summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .muted-note {
+      color: #6d8095;
+      font-size: 12px;
+    }
+
+    @media (max-width: 991px) {
+      .filter-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .kpi-grid {
+        grid-template-columns: repeat(12, 1fr);
+      }
+
+      .kpi-card {
+        grid-column: span 6 !important;
+        min-height: 100px;
+      }
+
+      .table-wrap {
+        max-width: calc(100vw - 36px);
+      }
+    }
+
+    @media (max-width: 575px) {
+      .kpi-grid {
+        grid-template-columns: repeat(12, 1fr);
+      }
+
+      .date-popover {
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      .kpi-value {
+        font-size: 27px;
+      }
+
+      .kpi-card {
+        grid-column: span 12 !important;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div class="container" style="max-width: 900px;">
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="container page-shell">
+    <div class="topline">
       <div>
-        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Користувач</small>
-        <div class="fw-bold fs-5 text-dark" id="ui-userName">...</div>
+        <div class="text-uppercase" style="font-size:11px;color:#6f8093;font-weight:700;letter-spacing:.05em;">Користувач</div>
+        <div id="uiUserName" style="font-size:24px;font-weight:800;line-height:1.15;">...</div>
       </div>
-      <div>
-        <span class="badge bg-light text-dark border"><i class="bi bi-shield-lock"></i>
-          <span id="ui-userRole">...</span></span>
-        <button class="btn btn-sm btn-white text-primary ms-1" onclick="forceReload()">
-          <i class="bi bi-arrow-clockwise fs-5"></i>
+      <div class="d-flex align-items-center gap-2">
+        <span class="role-badge"><i class="bi bi-shield-lock me-1"></i><span id="uiUserRole">...</span></span>
+        <button class="btn btn-sm btn-light border" id="forceReloadBtn" title="Оновити"><i class="bi bi-arrow-clockwise"></i></button>
+      </div>
+    </div>
+
+    <div class="panel-card p-3 mb-3" id="filtersCard">
+      <div class="filters-head">
+        <button class="filters-toggle" id="filtersToggleBtn" type="button">
+          <i class="bi bi-funnel"></i>
+          <span>Фільтри</span>
+          <i class="bi bi-chevron-down" id="filtersToggleIcon"></i>
         </button>
       </div>
-    </div>
+      <div class="filter-grid mt-2 d-none" id="filtersBody">
+        <div class="date-picker-wrap">
+          <label class="field-label">Період</label>
+          <button class="field-btn" id="dateTrigger" type="button">
+            <span id="dateTriggerLabel">...</span>
+            <i class="bi bi-calendar3"></i>
+          </button>
+          <div class="date-popover d-none" id="datePopover">
+            <div class="preset-row">
+              <button class="preset-btn" data-preset="day" type="button">Вчора</button>
+              <button class="preset-btn" data-preset="week" type="button">Тиждень</button>
+              <button class="preset-btn" data-preset="month" type="button">Місяць</button>
+            </div>
 
-    <ul class="nav nav-pills nav-fill" id="rangeTabs"></ul>
+            <div class="calendar-head">
+              <button class="cal-nav" id="calPrev" type="button"><i class="bi bi-chevron-left"></i></button>
+              <div class="calendar-title" id="calTitle">...</div>
+              <button class="cal-nav" id="calNext" type="button"><i class="bi bi-chevron-right"></i></button>
+            </div>
+            <div class="calendar-grid" id="calWeekdays"></div>
+            <div class="calendar-grid" id="calDays"></div>
 
-    <div class="card p-3" id="filtersCard">
-      <div class="row g-2">
-        <div class="col-12 col-md-6">
-          <label class="small text-muted fw-bold">Джерело</label>
-          <select class="form-select" id="sourceFilter" onchange="loadStats()"></select>
-        </div>
-        <div class="col-12 col-md-6" id="managerFilterBlock">
-          <label class="small text-muted fw-bold">Менеджер</label>
-          <select class="form-select" id="managerFilter" onchange="loadStats()"></select>
-        </div>
-        <div class="col-12 col-md-6">
-          <label class="small text-muted fw-bold">Період (від / до)</label>
-          <div class="range-inputs">
-            <input type="date" class="form-control" id="dateFrom" onchange="applyCustomRange()">
-            <input type="date" class="form-control" id="dateTo" onchange="applyCustomRange()">
+            <div class="range-text" id="dateRangeText"></div>
+            <div class="popover-actions">
+              <button class="btn btn-sm btn-light border" id="dateCancel" type="button">Скасувати</button>
+              <button class="btn btn-sm btn-primary" id="dateApply" type="button">Застосувати</button>
+            </div>
           </div>
-          <div class="range-bar"></div>
         </div>
-        <div class="col-12 col-md-6 d-flex align-items-end">
-          <div class="small text-muted" id="rangeLabel">Період: —</div>
+
+        <div>
+          <label class="field-label">Джерело</label>
+          <select class="field-select" id="sourceFilter"></select>
+        </div>
+
+        <div id="managerField">
+          <label class="field-label">Менеджер</label>
+          <select class="field-select" id="managerFilter"></select>
+        </div>
+
+        <div>
+          <button class="btn btn-dark w-100" id="applyFiltersBtn" style="min-height:44px;">Оновити</button>
         </div>
       </div>
     </div>
 
-    <div id="appContent">
-      <div class="text-center mt-5 pt-4">
+    <div id="appContent" class="d-grid" style="gap:10px;">
+      <div class="text-center py-5">
         <div class="spinner-border text-primary"></div>
       </div>
     </div>
-  </div>
 
-  <div class="toast-container">
-    <div id="liveToast" class="toast align-items-center border-0 shadow" role="alert" aria-live="assertive"
-      aria-atomic="true">
-      <div class="d-flex">
-        <div class="toast-body d-flex align-items-center">
-          <i class="bi bi-info-circle-fill me-2 fs-5"></i>
-          <span id="toastMessage">...</span>
+    <div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index:1080;">
+      <div id="liveToast" class="toast text-bg-dark border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body" id="toastMessage">...</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
         </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
       </div>
     </div>
-  </div>
 
-  <div class="container" style="max-width: 900px;">
-    <div id="debugPanel" class="card p-3 d-none">
+    <div id="debugPanel" class="panel-card p-3 d-none mt-3">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <div class="fw-bold">Debug</div>
-        <button class="btn btn-sm btn-outline-secondary" onclick="toggleDebug(false)">Закрити</button>
+        <strong>Debug</strong>
+        <button class="btn btn-sm btn-outline-secondary" id="debugClose">Закрити</button>
       </div>
       <div class="small text-muted mb-2" id="debugMeta"></div>
       <pre class="small mb-0" id="debugBody" style="white-space: pre-wrap;"></pre>
@@ -212,526 +569,1052 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzxOb7aq6buRdyVH0W-XICmFbbhbVzrS68RQVLR9Cyg0g89tP2qfh5qhdZ-qwbBMfqf0w/exec";
-
     const urlParams = new URLSearchParams(window.location.search);
     const USER_ID = urlParams.get('userid');
     const DEBUG = urlParams.get('debug') === '1';
 
-    let USER_NAME = "";
-    let USER_ROLE = "";
-    let ACCESS = null;
-    let CURRENT_RANGE = 'day';
-    let toastInstance;
-    let debugLines = [];
-
-    const DEFAULT_SOURCES = ['усього'];
-
-    window.onload = async function () {
-      toastInstance = new bootstrap.Toast(document.getElementById('liveToast'), { delay: 3000 });
-
-      if (!USER_ID) {
-        document.getElementById('appContent').innerHTML = '<div class="alert alert-danger text-center">Не вказано User ID</div>';
-        return;
-      }
-
-      buildRangeTabs();
-      buildSourceFilter(DEFAULT_SOURCES);
-      setDateInputsForRange('day');
-
-      await fetchAccess();
+    const state = {
+      access: null,
+      baseData: null,
+      dataKey: '',
+      filters: {
+        source: 'усього',
+        manager: 'усього'
+      },
+      range: {
+        preset: 'day',
+        start: '',
+        end: ''
+      },
+      picker: {
+        visible: false,
+        viewMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+        tempStart: '',
+        tempEnd: ''
+      },
+      debugLines: []
     };
 
-    async function fetchAccess() {
-      try {
-        const res = await apiGet({ action: 'getAccess', userId: USER_ID });
-        if (!res || res.error) throw new Error(res.error || 'Помилка доступу');
-        ACCESS = res;
+    let toastInstance;
 
-        if (!ACCESS.allowed) {
-          document.getElementById('ui-userName').innerText = ACCESS.manager || 'Невідомо';
-          document.getElementById('ui-userRole').innerText = ACCESS.role || 'Без доступу';
-          document.getElementById('appContent').innerHTML = '<div class="alert alert-danger text-center">Доступ заборонено</div>';
-          document.getElementById('filtersCard').classList.add('d-none');
-          return;
-        }
+    window.addEventListener('load', init);
 
-        USER_NAME = ACCESS.manager || 'Менеджер';
-        USER_ROLE = ACCESS.role || '';
-        document.getElementById('ui-userName').innerText = USER_NAME;
-        document.getElementById('ui-userRole').innerText = USER_ROLE;
+    async function init() {
+      toastInstance = new bootstrap.Toast(document.getElementById('liveToast'), { delay: 2600 });
+      bindEvents();
+      initDefaultRange();
 
-        buildManagerFilter(ACCESS.role === 'Керівник');
-        loadStats();
-      } catch (e) {
-        showToast('Помилка доступу: ' + e.message);
-        if (DEBUG) console.error('Access error', e);
-        pushDebug('Access error: ' + e.message);
-        showDebug();
-      }
-    }
-
-    function buildRangeTabs() {
-      const tabs = document.getElementById('rangeTabs');
-      tabs.innerHTML = `
-        <li class="nav-item"><a class="nav-link active" onclick="setRange('day', this)">За вчора</a></li>
-        <li class="nav-item"><a class="nav-link" onclick="setRange('week', this)">Тиждень</a></li>
-        <li class="nav-item"><a class="nav-link" onclick="setRange('month', this)">Місяць</a></li>
-      `;
-    }
-
-    function setRange(rangeKey, el) {
-      CURRENT_RANGE = rangeKey;
-      document.querySelectorAll('#rangeTabs .nav-link').forEach(l => l.classList.remove('active'));
-      if (el) el.classList.add('active');
-      setDateInputsForRange(rangeKey);
-      loadStats();
-    }
-
-    function buildSourceFilter(list) {
-      const select = document.getElementById('sourceFilter');
-      const sources = (list && list.length) ? list : DEFAULT_SOURCES;
-      select.innerHTML = sources.map(s => `<option value="${s}">${s}</option>`).join('');
-    }
-
-    function setDateInputsForRange(rangeKey) {
-      const from = document.getElementById('dateFrom');
-      const to = document.getElementById('dateTo');
-      const today = new Date();
-      const yyyyMmDd = (d) => d.toISOString().split('T')[0];
-
-      if (rangeKey === 'day') {
-        const y = new Date(today);
-        y.setDate(y.getDate() - 1);
-        from.value = yyyyMmDd(y);
-        to.value = yyyyMmDd(y);
-      } else if (rangeKey === 'week') {
-        const d = new Date(today);
-        const day = d.getDay();
-        const diff = day === 0 ? 6 : day - 1;
-        d.setDate(d.getDate() - diff);
-        from.value = yyyyMmDd(d);
-        to.value = yyyyMmDd(today);
-      } else if (rangeKey === 'month') {
-        const d = new Date(today.getFullYear(), today.getMonth(), 1);
-        from.value = yyyyMmDd(d);
-        to.value = yyyyMmDd(today);
-      }
-    }
-
-    function applyCustomRange() {
-      const from = document.getElementById('dateFrom').value;
-      const to = document.getElementById('dateTo').value;
-      if (!from || !to) return;
-      CURRENT_RANGE = 'custom';
-      document.querySelectorAll('#rangeTabs .nav-link').forEach(l => l.classList.remove('active'));
-      loadStats();
-    }
-
-    function buildManagerFilter(show) {
-      const block = document.getElementById('managerFilterBlock');
-      const select = document.getElementById('managerFilter');
-      if (!show) {
-        block.classList.add('d-none');
-        select.innerHTML = `<option value="${USER_NAME}">${USER_NAME}</option>`;
+      if (!USER_ID) {
+        showErrorCard('Не вказано User ID');
         return;
       }
 
-      block.classList.remove('d-none');
-      select.innerHTML = `<option value="усього">усього</option>`;
-    }
-
-    async function loadStats() {
-      if (!ACCESS || !ACCESS.allowed) return;
-
-      document.getElementById('appContent').innerHTML = '<div class="text-center mt-5"><div class="spinner-border text-secondary"></div></div>';
-
-      const source = document.getElementById('sourceFilter').value || 'усього';
-      const managerSelect = document.getElementById('managerFilter');
-      const manager = managerSelect ? managerSelect.value : USER_NAME;
-
       try {
-        const res = await apiGet({
-          action: 'getStats',
-          userId: USER_ID,
-          range: CURRENT_RANGE,
-          source: source,
-          manager: manager,
-          start: document.getElementById('dateFrom').value || '',
-          end: document.getElementById('dateTo').value || ''
+        await fetchAccess();
+        await ensureDataLoaded(true);
+        renderFromCache();
+      } catch (err) {
+        showErrorCard('Помилка запуску: ' + escapeHtml(err.message || String(err)));
+        pushDebug('init error: ' + String(err));
+        showDebugIfNeeded();
+      }
+    }
+
+    function bindEvents() {
+      document.getElementById('forceReloadBtn').addEventListener('click', () => hardRefresh().catch(handleUiError));
+      document.getElementById('applyFiltersBtn').addEventListener('click', () => {
+        renderFromCache();
+        if (window.innerWidth < 992) toggleFiltersPanel(false);
+      });
+      document.getElementById('filtersToggleBtn').addEventListener('click', () => {
+        const body = document.getElementById('filtersBody');
+        toggleFiltersPanel(body.classList.contains('d-none'));
+      });
+
+      document.getElementById('sourceFilter').addEventListener('change', onFilterChanged);
+      document.getElementById('managerFilter').addEventListener('change', onFilterChanged);
+
+      document.getElementById('dateTrigger').addEventListener('click', () => toggleDatePopover(true));
+      document.getElementById('dateCancel').addEventListener('click', () => toggleDatePopover(false));
+      document.getElementById('dateApply').addEventListener('click', applyDateSelection);
+      document.getElementById('calPrev').addEventListener('click', () => shiftCalendarMonth(-1));
+      document.getElementById('calNext').addEventListener('click', () => shiftCalendarMonth(1));
+
+      document.getElementById('debugClose').addEventListener('click', () => document.getElementById('debugPanel').classList.add('d-none'));
+
+      document.querySelectorAll('[data-preset]').forEach((btn) => {
+        btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+      });
+
+      document.getElementById('datePopover').addEventListener('click', (e) => e.stopPropagation());
+      document.getElementById('dateTrigger').addEventListener('click', (e) => e.stopPropagation());
+
+      document.addEventListener('click', (e) => {
+        if (!state.picker.visible) return;
+        const pop = document.getElementById('datePopover');
+        const trigger = document.getElementById('dateTrigger');
+        if (pop.contains(e.target) || trigger.contains(e.target)) return;
+        toggleDatePopover(false);
+      });
+    }
+
+    async function hardRefresh() {
+      await fetchAccess(true);
+      await ensureDataLoaded(true);
+      renderFromCache();
+      showToast('Дані та кеш оновлено');
+    }
+
+    function initDefaultRange() {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const key = toDateKey(yesterday);
+      state.range.preset = 'day';
+      state.range.start = key;
+      state.range.end = key;
+      state.picker.tempStart = key;
+      state.picker.tempEnd = key;
+      state.picker.viewMonth = new Date(yesterday.getFullYear(), yesterday.getMonth(), 1);
+      updateRangeTexts();
+    }
+
+    async function fetchAccess(force) {
+      const res = await apiGet({ action: 'getAccess', userId: USER_ID, force: force ? '1' : '' });
+      if (!res || res.error) throw new Error(res && res.error ? res.error : 'access_failed');
+
+      state.access = res;
+      if (!res.allowed) {
+        document.getElementById('uiUserName').textContent = res.manager || 'Невідомо';
+        document.getElementById('uiUserRole').textContent = res.role || 'Без доступу';
+        document.getElementById('filtersCard').classList.add('d-none');
+        showErrorCard('Доступ заборонено');
+        return;
+      }
+
+      document.getElementById('uiUserName').textContent = res.manager || 'Менеджер';
+      document.getElementById('uiUserRole').textContent = res.role || '';
+
+      if (res.role !== 'Керівник') {
+        document.getElementById('managerField').classList.add('d-none');
+        state.filters.manager = res.manager || 'усього';
+      }
+    }
+
+    async function ensureDataLoaded(force) {
+      if (!state.access || !state.access.allowed) return;
+
+      const key = `${state.range.start}|${state.range.end}`;
+      if (!force && state.baseData && state.dataKey === key) return;
+
+      document.getElementById('appContent').innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+
+      const payload = {
+        action: 'getStats',
+        userId: USER_ID,
+        range: state.range.preset,
+        start: state.range.start,
+        end: state.range.end,
+        force: force ? '1' : ''
+      };
+
+      const res = await apiGet(payload);
+      if (res.error) throw new Error(res.error);
+
+      state.baseData = res;
+      state.dataKey = key;
+
+      hydrateFiltersFromData();
+      pushDebug('Data loaded for ' + key + ', rows: ' + totalRowsCount(res));
+      showDebugIfNeeded();
+    }
+
+    function onFilterChanged() {
+      state.filters.source = document.getElementById('sourceFilter').value || 'усього';
+      state.filters.manager = document.getElementById('managerFilter').value || 'усього';
+      renderFromCache();
+    }
+
+    function toggleFiltersPanel(expand) {
+      const body = document.getElementById('filtersBody');
+      const icon = document.getElementById('filtersToggleIcon');
+      body.classList.toggle('d-none', !expand);
+      icon.className = expand ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
+    }
+
+    function hydrateFiltersFromData() {
+      const data = state.baseData || {};
+      const opts = data.options || {};
+      const sources = Array.isArray(opts.sources) && opts.sources.length ? opts.sources : ['усього'];
+      const managers = Array.isArray(opts.managers) && opts.managers.length ? opts.managers : ['усього'];
+
+      const sourceSelect = document.getElementById('sourceFilter');
+      const prevSource = state.filters.source;
+      sourceSelect.innerHTML = sources.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+      sourceSelect.value = sources.includes(prevSource) ? prevSource : 'усього';
+      state.filters.source = sourceSelect.value;
+
+      const managerSelect = document.getElementById('managerFilter');
+      if (state.access.role === 'Керівник') {
+        const prevManager = state.filters.manager;
+        managerSelect.innerHTML = managers.map((m) => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+        managerSelect.value = managers.includes(prevManager) ? prevManager : 'усього';
+        state.filters.manager = managerSelect.value;
+      } else {
+        const only = state.access.manager || 'усього';
+        managerSelect.innerHTML = `<option value="${escapeHtml(only)}">${escapeHtml(only)}</option>`;
+        state.filters.manager = only;
+      }
+    }
+
+    function renderFromCache() {
+      if (!state.access || !state.access.allowed || !state.baseData) return;
+
+      updateRangeTexts();
+
+      const ranges = state.baseData.ranges || {};
+      const current = ranges.current || {};
+      const previous = ranges.previous || {};
+
+      const currentData = filterPeriodData(current.start, current.end);
+      const previousData = filterPeriodData(previous.start, previous.end);
+
+      const currentMetrics = computeMetrics(currentData);
+      const previousMetrics = computeMetrics(previousData);
+
+      const series = buildPlanFactSeries(currentData.ordersCreated, current.start, current.end, state.baseData.plan ? state.baseData.plan.monthly : {});
+      currentMetrics.planSales = series.planTotal;
+      previousMetrics.planSales = calcPlanTotalForRange(previous.start, previous.end, state.baseData.plan ? state.baseData.plan.monthly : {});
+      const sourcesRows = buildSourceRows(current.start, current.end);
+      const dailyRows = buildDailyRows(current.start, current.end);
+      const managerRows = state.access.role === 'Керівник' ? buildManagerRows(current.start, current.end) : [];
+
+      document.getElementById('appContent').innerHTML = buildDashboardHtml({
+        currentLabel: current.label || '',
+        previousLabel: previous.label || '',
+        currentMetrics,
+        previousMetrics,
+        series,
+        sourcesRows,
+        dailyRows,
+        managerRows
+      });
+    }
+
+    function filterPeriodData(startKey, endKey, fixedSource, fixedManager) {
+      const ds = (state.baseData && state.baseData.datasets) || {};
+      const sourceFilter = fixedSource || state.filters.source;
+      const managerFilter = fixedManager || state.filters.manager;
+
+      const passManager = (row) => {
+        if (!managerFilter || managerFilter === 'усього') return true;
+        return String(row.manager || '') === String(managerFilter);
+      };
+      const passSource = (row) => {
+        if (!sourceFilter || sourceFilter === 'усього') return true;
+        return String(row.source || '') === String(sourceFilter);
+      };
+      const passDate = (row) => row.date >= startKey && row.date <= endKey;
+
+      return {
+        ordersCreated: (ds.ordersCreated || []).filter((r) => passDate(r) && passManager(r) && passSource(r)),
+        ordersCompleted: (ds.ordersCompleted || []).filter((r) => passDate(r) && passManager(r) && passSource(r)),
+        leadsCreated: (ds.leadsCreated || []).filter((r) => passDate(r) && passManager(r) && passSource(r)),
+        leadsUpdated: (ds.leadsUpdated || []).filter((r) => passDate(r) && passManager(r) && passSource(r)),
+        ga4: (ds.ga4 || []).filter((r) => passDate(r) && passSource(r))
+      };
+    }
+
+    function computeMetrics(data) {
+      const m = {
+        visitorsTotal: 0,
+        visitorsNew: 0,
+        visitorsReturning: 0,
+
+        planSales: 0,
+        factSales: 0,
+        planPercent: 0,
+
+        leadsCreated: 0,
+        leadsItems: 0,
+        leadsAmount: 0,
+        leadsChuykaItems: 0,
+        leadsChuykaAmount: 0,
+
+        leadsProcessed: 0,
+        leadsSuccess: 0,
+        leadsSuccessItems: 0,
+        leadsSuccessAmount: 0,
+        leadsSuccessChuykaItems: 0,
+        leadsSuccessChuykaAmount: 0,
+
+        ordersCreated: 0,
+        ordersItems: 0,
+        ordersAmount: 0,
+        ordersChuykaItems: 0,
+        ordersChuykaAmount: 0,
+
+        ordersCompleted: 0,
+        ordersCompletedItems: 0,
+        ordersCompletedPaid: 0,
+
+        avgCheck: 0
+      };
+
+      (data.ga4 || []).forEach((row) => {
+        m.visitorsTotal += num(row.total);
+        m.visitorsNew += num(row.newUsers);
+        m.visitorsReturning += num(row.returning);
+      });
+
+      const leadCreatedSet = new Set();
+      (data.leadsCreated || []).forEach((row) => {
+        if (row.id) leadCreatedSet.add(row.id);
+        m.leadsItems += num(row.qty);
+        m.leadsAmount += num(row.amount);
+        if (row.chuyka) {
+          m.leadsChuykaItems += num(row.qty);
+          m.leadsChuykaAmount += num(row.amount);
+        }
+      });
+      m.leadsCreated = leadCreatedSet.size;
+
+      const processedSet = new Set();
+      const successSet = new Set();
+      (data.leadsUpdated || []).forEach((row) => {
+        if (row.id) processedSet.add(row.id);
+        if (row.success && row.id) successSet.add(row.id);
+        if (row.success) {
+          m.leadsSuccessItems += num(row.qty);
+          m.leadsSuccessAmount += num(row.amount);
+          if (row.chuyka) {
+            m.leadsSuccessChuykaItems += num(row.qty);
+            m.leadsSuccessChuykaAmount += num(row.amount);
+          }
+        }
+      });
+      m.leadsProcessed = processedSet.size;
+      m.leadsSuccess = successSet.size;
+
+      const orderCreatedSet = new Set();
+      (data.ordersCreated || []).forEach((row) => {
+        if (row.id) orderCreatedSet.add(row.id);
+        m.ordersItems += num(row.qty);
+        m.ordersAmount += num(row.amount);
+        if (row.chuyka) {
+          m.ordersChuykaItems += num(row.qty);
+          m.ordersChuykaAmount += num(row.amount);
+        }
+      });
+      m.ordersCreated = orderCreatedSet.size;
+      m.factSales = m.ordersAmount;
+
+      const completedSet = new Set();
+      (data.ordersCompleted || []).forEach((row) => {
+        if (String(row.statusGroup) !== '5') return;
+        if (row.id) completedSet.add(row.id);
+        m.ordersCompletedItems += num(row.qty);
+        const paid = num(row.paid);
+        m.ordersCompletedPaid += paid > 0 ? paid : num(row.amount);
+      });
+      m.ordersCompleted = completedSet.size;
+      m.avgCheck = m.ordersCompleted > 0 ? m.ordersCompletedPaid / m.ordersCompleted : 0;
+
+      return m;
+    }
+
+    function buildPlanFactSeries(ordersCreatedRows, startKey, endKey, monthPlanMap) {
+      const start = fromDateKey(startKey);
+      const end = fromDateKey(endKey);
+      if (!start || !end) return { points: [], max: 0, planTotal: 0, factTotal: 0 };
+
+      const factByDate = {};
+      (ordersCreatedRows || []).forEach((row) => {
+        factByDate[row.date] = (factByDate[row.date] || 0) + num(row.amount);
+      });
+
+      const points = [];
+      let planAcc = 0;
+      let factAcc = 0;
+      let maxDaily = 0;
+
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const dateKey = toDateKey(d);
+        const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const monthlyPlan = num(monthPlanMap && monthPlanMap[monthKey]);
+        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+        const dailyPlan = daysInMonth > 0 ? monthlyPlan / daysInMonth : 0;
+        const dailyFact = num(factByDate[dateKey]);
+
+        planAcc += dailyPlan;
+        factAcc += dailyFact;
+        maxDaily = Math.max(maxDaily, dailyPlan, dailyFact);
+
+        points.push({
+          date: dateKey,
+          label: formatDateShort(dateKey),
+          dailyPlan: dailyPlan,
+          dailyFact: dailyFact,
+          plan: planAcc,
+          fact: factAcc
         });
-
-        if (res.error) {
-          throw new Error(res.error);
-        }
-
-        if (DEBUG && res.debug) {
-          console.log('Backend debug:', res.debug);
-          pushDebug(res.debug.join('\n'));
-          showDebug();
-        }
-        if (DEBUG && res.cache) {
-          pushDebug('Cache: ' + (res.cache.hit ? 'HIT' : 'MISS') + ' ' + res.cache.key);
-          showDebug();
-        }
-
-        const sourceList = (res.breakdowns && res.breakdowns.sources || []).map(r => r.source);
-        if (sourceList.length) {
-          const current = document.getElementById('sourceFilter').value || 'усього';
-          buildSourceFilter(sourceList);
-          document.getElementById('sourceFilter').value = sourceList.includes(current) ? current : 'усього';
-        }
-
-        if (ACCESS.role === 'Керівник') {
-          hydrateManagerFilter(res);
-        }
-
-        renderDashboard(res);
-        document.getElementById('rangeLabel').textContent = 'Період: ' + (res.range && res.range.label ? res.range.label : '—');
-      } catch (e) {
-        document.getElementById('appContent').innerHTML = '<div class="alert alert-danger text-center">Не вдалося завантажити дані</div>';
-        showToast('Помилка: ' + e.message);
-        if (DEBUG) console.error('Stats error', e);
-        pushDebug('Stats error: ' + e.message);
-        showDebug();
       }
+
+      return {
+        points,
+        max: Math.max(planAcc, factAcc, 1),
+        maxDaily: Math.max(maxDaily, 1),
+        planTotal: planAcc,
+        factTotal: factAcc
+      };
     }
 
-    function hydrateManagerFilter(res) {
-      const select = document.getElementById('managerFilter');
-      if (!select) return;
-      const managers = (res.breakdowns && res.breakdowns.managers || []).map(r => r.manager).filter(m => m && m !== 'усього');
-      const unique = Array.from(new Set(managers));
-      const current = select.value || 'усього';
+    function calcPlanTotalForRange(startKey, endKey, monthPlanMap) {
+      const start = fromDateKey(startKey);
+      const end = fromDateKey(endKey);
+      if (!start || !end) return 0;
 
-      select.innerHTML = `<option value="усього">усього</option>` + unique.map(m => `<option value="${m}">${m}</option>`).join('');
-      select.value = current;
+      let total = 0;
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const monthlyPlan = num(monthPlanMap && monthPlanMap[monthKey]);
+        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+        total += daysInMonth > 0 ? (monthlyPlan / daysInMonth) : 0;
+      }
+      return total;
     }
 
-    function renderDashboard(data) {
-      const metrics = data.metrics || {};
-      const rangeLabel = (data.range && data.range.label) ? data.range.label : '';
+    function buildSourceRows(startKey, endKey) {
+      const sourceList = ((state.baseData && state.baseData.options && state.baseData.options.sources) || [])
+        .filter((s) => s && s !== 'усього');
 
-      const cards = buildMetricCards(metrics, rangeLabel, data.planSeries);
-      const sourcesTable = buildSourcesTable(data.breakdowns ? data.breakdowns.sources : []);
-      const managersTable = buildManagersTable(data.breakdowns ? data.breakdowns.managers : []);
-      const ga4Table = buildGa4Table(data.ga4Rows || []);
-      const dailyTable = buildDailyTable(data.dailyRows || []);
-
-      document.getElementById('appContent').innerHTML = `
-        <div class="row g-2 g-metrics">
-          ${cards}
-        </div>
-
-        <div class="card p-3">
-          <div class="fw-bold mb-2">По джерелам</div>
-          ${sourcesTable}
-        </div>
-
-        <div class="card p-3">
-          <div class="fw-bold mb-2">GA4 по джерелам</div>
-          ${ga4Table}
-        </div>
-
-        <div class="card p-3">
-          <div class="fw-bold mb-2">Щоденна статистика</div>
-          ${dailyTable}
-        </div>
-
-        ${managersTable}
-      `;
+      return sourceList.map((source) => {
+        const data = filterPeriodData(startKey, endKey, source, state.filters.manager);
+        const metrics = computeMetrics(data);
+        return { source, metrics };
+      }).sort((a, b) => a.source.localeCompare(b.source));
     }
 
-    function buildMetricCards(metrics, rangeLabel, planSeries) {
-      const cards = [
-        metricCard('Відвідувачі', `${formatNumber(metrics.visitors?.total)}`, `Нові: ${formatNumber(metrics.visitors?.newUsers)} · Поверн.: ${formatNumber(metrics.visitors?.returning)}`),
-        metricCard('Оброблені ліди', `${formatNumber(metrics.processedLeads?.total)}`, `Успішні: ${formatNumber(metrics.processedLeads?.success)}`),
-        metricCard('Товари в лідах', `${formatNumber(metrics.leadItems?.count)}`, `Сума: ${formatMoney(metrics.leadItems?.sum)}`),
-        metricCard('Товари', `${formatNumber(metrics.products?.count)}`, `Сума: ${formatMoney(metrics.products?.sum)}`),
-        metricCard('Чуйки', `${formatNumber(metrics.chuyka?.count)}`, `Сума: ${formatMoney(metrics.chuyka?.sum)}`),
-        metricCard('Закриті замовлення', `${formatNumber(metrics.closed?.count)}`, `Сума: ${formatMoney(metrics.closed?.sum)}`),
-        metricCard('Чуйки в закритих', `${formatNumber(metrics.closedChuyka?.count)}`, `Сума: ${formatMoney(metrics.closedChuyka?.sum)}`),
-        metricCard('Допродажі', `${formatNumber(metrics.upsell?.count)}`, `Сума: ${formatMoney(metrics.upsell?.sum)}`),
-        metricCard('Конверсія', `${formatPercent(metrics.conversion?.leadToContact)} → ${formatPercent(metrics.conversion?.contactToOrder)}`, `Lead→Order: ${formatPercent(metrics.conversion?.leadToOrder)}`),
-        metricCard('Середній чек', `${formatMoney(metrics.avgCheck)}`, `Оплата: ${formatMoney(metrics.avgCheck)} · Товар: ${formatMoney(metrics.avgCheckByItems)}`),
-        metricCard('План/період', `${formatMoney(metrics.plan?.value)}`, `% виконання: ${formatPercent(metrics.plan?.percent)}`),
-        metricCard('ВВ від закритих', `${formatPercent(metrics.vvShare)}`, `частка у сумі`),
-        planSeries ? planChartCard(planSeries) : ''
-      ];
+    function buildDailyRows(startKey, endKey) {
+      const rows = [];
+      const start = fromDateKey(startKey);
+      const end = fromDateKey(endKey);
+      if (!start || !end) return rows;
 
-      return cards.filter(Boolean).join('');
+      for (let d = new Date(end); d >= start; d.setDate(d.getDate() - 1)) {
+        const key = toDateKey(d);
+        const data = filterPeriodData(key, key);
+        const metrics = computeMetrics(data);
+        rows.push({ date: key, metrics });
+      }
+
+      return rows;
     }
 
-    function metricCard(title, value, subtitle) {
+    function buildManagerRows(startKey, endKey) {
+      const managers = ((state.baseData && state.baseData.options && state.baseData.options.managers) || [])
+        .filter((m) => m && m !== 'усього');
+
+      return managers.map((manager) => {
+        const data = filterPeriodData(startKey, endKey, state.filters.source, manager);
+        return { manager, metrics: computeMetrics(data) };
+      }).sort((a, b) => a.manager.localeCompare(b.manager));
+    }
+
+    function buildDashboardHtml(model) {
+      const cm = model.currentMetrics;
+      const pm = model.previousMetrics;
+
+      const planPercent = cm.planSales > 0 ? (cm.factSales / cm.planSales) : 0;
+      cm.planPercent = planPercent;
+
+      const previousPlanPercent = pm.planSales > 0 ? (pm.factSales / pm.planSales) : 0;
+      pm.planPercent = previousPlanPercent;
+
+      const planBarColor = percentToColor(planPercent);
+      const planBarWidth = Math.max(0, Math.min(100, planPercent * 100));
+
       return `
-        <div class="col-12 col-md-6">
-          <div class="card p-3 h-100">
-            <div class="metric-label">${title}</div>
-            <div class="metric-value">${value}</div>
-            <div class="metric-sub">${subtitle || ''}</div>
+        <div class="panel-card p-3">
+          <div class="section-title">Основні показники</div>
+          <div class="kpi-grid">
+            ${metricCard('Всього користувачів', fmtNumber(cm.visitorsTotal), trendHtml(cm.visitorsTotal, pm.visitorsTotal, true), 'span 3')}
+            ${metricCard('Нові користувачі', fmtNumber(cm.visitorsNew), trendHtml(cm.visitorsNew, pm.visitorsNew, true), 'span 3')}
+            ${metricCard('Повернувшіся користувачі', fmtNumber(cm.visitorsReturning), trendHtml(cm.visitorsReturning, pm.visitorsReturning, true), 'span 3')}
+            ${metricCard('Середній чек', fmtMoney(cm.avgCheck), trendHtml(cm.avgCheck, pm.avgCheck, true), 'span 3')}
+
+            ${metricCard('План продажів', fmtMoney(cm.planSales), trendHtml(cm.planSales, pm.planSales, true), 'span 4', `<div class="kpi-sub">${escapeHtml(model.currentLabel)}</div>`)}
+            ${metricCard('Факт продажів', fmtMoney(cm.factSales), trendHtml(cm.factSales, pm.factSales, true), 'span 4')}
+            ${metricCard('Виконання плану', fmtPercent(cm.planPercent), trendHtml(cm.planPercent, pm.planPercent, true), 'span 4', `
+              <div class="plan-progress"><span style="width:${planBarWidth}%;background:${planBarColor};"></span></div>
+            `)}
           </div>
         </div>
-      `;
-    }
 
-    function planChartCard(series) {
-      const chart = renderPlanChart(series);
-      return `
-        <div class="col-12">
-          <div class="card p-3 h-100">
-            <div class="metric-label">План vs факт (накопичувально)</div>
-            <div class="small text-muted mb-2">Період: ${series.range}</div>
-            ${chart}
+        <div class="panel-card p-3">
+          <div class="section-title">Ліди</div>
+          <div class="metric-band">
+            <div class="metric-band-title">Створені</div>
+            <div class="kpi-grid">
+              ${metricCard('Створено лідів', fmtNumber(cm.leadsCreated), trendHtml(cm.leadsCreated, pm.leadsCreated, true), 'span 4')}
+              ${metricCard('Товарів у лідах', fmtNumber(cm.leadsItems), trendHtml(cm.leadsItems, pm.leadsItems, true), 'span 4')}
+              ${metricCard('Сума товарів у лідах', fmtMoney(cm.leadsAmount), trendHtml(cm.leadsAmount, pm.leadsAmount, true), 'span 4')}
+            </div>
+          </div>
+          <div class="metric-band">
+            <div class="metric-band-title">Обробка та успішність</div>
+            <div class="kpi-grid">
+              ${metricCard('Оброблено лідів', fmtNumber(cm.leadsProcessed), trendHtml(cm.leadsProcessed, pm.leadsProcessed, true), 'span 4')}
+              ${metricCard('Успішних лідів', fmtNumber(cm.leadsSuccess), trendHtml(cm.leadsSuccess, pm.leadsSuccess, true), 'span 4')}
+              ${metricCard('Товарів в успішних', fmtNumber(cm.leadsSuccessItems), trendHtml(cm.leadsSuccessItems, pm.leadsSuccessItems, true), 'span 4')}
+            </div>
+          </div>
+          <div class="kpi-grid">
+            ${metricCard('Чуйка у лідах (шт/сума)', `${fmtNumber(cm.leadsChuykaItems)} / ${fmtMoney(cm.leadsChuykaAmount)}`, trendHtml(cm.leadsChuykaAmount, pm.leadsChuykaAmount, true), 'span 4')}
+            ${metricCard('Сума успішних лідів', fmtMoney(cm.leadsSuccessAmount), trendHtml(cm.leadsSuccessAmount, pm.leadsSuccessAmount, true), 'span 4')}
+            ${metricCard('Чуйка в успішних (шт/сума)', `${fmtNumber(cm.leadsSuccessChuykaItems)} / ${fmtMoney(cm.leadsSuccessChuykaAmount)}`, trendHtml(cm.leadsSuccessChuykaAmount, pm.leadsSuccessChuykaAmount, true), 'span 4')}
           </div>
         </div>
+
+        <div class="panel-card p-3">
+          <div class="section-title">Замовлення</div>
+          <div class="kpi-grid">
+            ${metricCard('Створено замовлень', fmtNumber(cm.ordersCreated), trendHtml(cm.ordersCreated, pm.ordersCreated, true), 'span 3')}
+            ${metricCard('Товарів у замовленнях', fmtNumber(cm.ordersItems), trendHtml(cm.ordersItems, pm.ordersItems, true), 'span 3')}
+            ${metricCard('Сума товарів', fmtMoney(cm.ordersAmount), trendHtml(cm.ordersAmount, pm.ordersAmount, true), 'span 3')}
+            ${metricCard('Чуйка (шт / сума)', `${fmtNumber(cm.ordersChuykaItems)} / ${fmtMoney(cm.ordersChuykaAmount)}`, trendHtml(cm.ordersChuykaAmount, pm.ordersChuykaAmount, true), 'span 3')}
+          </div>
+          <div class="metric-band mb-0">
+            <div class="metric-band-title">Завершені</div>
+            <div class="kpi-grid">
+              ${metricCard('Успішно завершені', fmtNumber(cm.ordersCompleted), trendHtml(cm.ordersCompleted, pm.ordersCompleted, true), 'span 4')}
+              ${metricCard('Товарів у завершених', fmtNumber(cm.ordersCompletedItems), trendHtml(cm.ordersCompletedItems, pm.ordersCompletedItems, true), 'span 4')}
+              ${metricCard('Оплати у завершених', fmtMoney(cm.ordersCompletedPaid), trendHtml(cm.ordersCompletedPaid, pm.ordersCompletedPaid, true), 'span 4')}
+            </div>
+          </div>
+        </div>
+
+        <details class="panel-card p-3" open>
+          <summary class="d-flex justify-content-between align-items-center mb-2">
+            <div class="section-title mb-0">План vs факт (накопичувально)</div>
+            <span class="muted-note"><i class="bi bi-chevron-down"></i></span>
+          </summary>
+          ${buildPlanChartHtml(model.series)}
+        </details>
+
+        <div class="panel-card p-3">
+          <div class="section-title">По джерелах</div>
+          ${buildSourcesTableHtml(model.sourcesRows)}
+        </div>
+
+        <div class="panel-card p-3">
+          <div class="section-title">Статистика по днях</div>
+          ${buildDailyTableHtml(model.dailyRows)}
+        </div>
+
+        ${state.access.role === 'Керівник' ? `
+          <div class="panel-card p-3">
+            <div class="section-title">Статистика по менеджерах</div>
+            ${buildManagersTableHtml(model.managerRows)}
+          </div>
+        ` : ''}
       `;
     }
 
-    function renderPlanChart(series) {
-      if (!series || !series.days || !series.days.length) {
-        return '<div class="text-muted small">Немає даних</div>';
-      }
-      const width = 600;
-      const height = 140;
-      const padding = 16;
-      const max = Math.max(...series.plan, ...series.fact, 1);
-
-      const points = (arr) => arr.map((v, i) => {
-        const x = padding + (i / (arr.length - 1 || 1)) * (width - padding * 2);
-        const y = height - padding - (v / max) * (height - padding * 2);
-        return `${x},${y}`;
-      }).join(' ');
-
+    function metricCard(label, value, trend, span, extra) {
       return `
-        <svg viewBox="0 0 ${width} ${height}" width="100%" height="140" aria-label="Plan vs Fact chart">
-          <rect x="0" y="0" width="${width}" height="${height}" fill="#f8f9fa" rx="12"></rect>
-          <polyline fill="none" stroke="#0d6efd" stroke-width="2" points="${points(series.plan)}"></polyline>
-          <polyline fill="none" stroke="#198754" stroke-width="2" points="${points(series.fact)}"></polyline>
-        </svg>
-        <div class="d-flex justify-content-between mt-2 small text-muted">
-          <div><span class="badge text-bg-primary">План</span></div>
-          <div><span class="badge text-bg-success">Факт</span></div>
+        <div class="kpi-card" style="grid-column:${span};">
+          <div class="kpi-label">${label}</div>
+          <div class="kpi-value">${value}</div>
+          ${trend || '<div class="trend neutral">—</div>'}
+          ${extra || ''}
         </div>
       `;
     }
 
-    function buildSourcesTable(rows) {
-      if (!rows || !rows.length) return '<div class="text-muted">Немає даних</div>';
+    function trendHtml(current, previous, higherBetter) {
+      const cur = num(current);
+      const prev = num(previous);
+      const diff = cur - prev;
 
-      const ordered = rows.slice();
-      const tbody = ordered.map(r => {
-        const m = r.metrics || {};
-        return `
-          <tr>
-            <td class="fw-bold">${r.source}</td>
-            <td>${formatNumber(m.leads?.total)}</td>
-            <td>${formatNumber(m.closed?.count)}</td>
-            <td>${formatMoney(m.closed?.sum)}</td>
-          </tr>
-        `;
+      if (Math.abs(diff) < 0.000001 && Math.abs(cur) < 0.000001 && Math.abs(prev) < 0.000001) {
+        return '<div class="trend neutral">без змін</div>';
+      }
+
+      const base = Math.abs(prev) > 0 ? (diff / Math.abs(prev)) : (cur !== 0 ? 1 : 0);
+      const pct = Math.abs(base) * 100;
+
+      let good = diff >= 0;
+      if (!higherBetter) good = diff <= 0;
+
+      const cls = diff === 0 ? 'neutral' : (good ? 'good' : 'bad');
+      const sign = diff > 0 ? '+' : (diff < 0 ? '-' : '');
+
+      return `<div class="trend ${cls}">${sign}${pct.toFixed(1)}% до попер. періоду</div>`;
+    }
+
+    function buildPlanChartHtml(series) {
+      if (!series || !series.points || !series.points.length) {
+        return '<div class="muted-note">Немає даних для графіка.</div>';
+      }
+      return renderCumulativeChart(series);
+    }
+
+    function renderCumulativeChart(series) {
+      const points = series.points;
+      const width = 980;
+      const height = 260;
+      const pad = { top: 24, right: 24, bottom: 34, left: 46 };
+      const max = Math.max(series.max, 1);
+
+      const x = (i) => {
+        if (points.length === 1) return width / 2;
+        return pad.left + (i / (points.length - 1)) * (width - pad.left - pad.right);
+      };
+
+      const y = (v) => pad.top + (1 - v / max) * (height - pad.top - pad.bottom);
+
+      const line = (key) => points.map((p, i) => `${x(i)},${y(num(p[key]))}`).join(' ');
+
+      const factArea = points.map((p, i) => `${x(i)},${y(num(p.fact))}`).join(' ')
+        + ` ${x(points.length - 1)},${height - pad.bottom} ${x(0)},${height - pad.bottom}`;
+
+      const ticks = 4;
+      const grid = [];
+      for (let i = 0; i <= ticks; i++) {
+        const ratio = i / ticks;
+        const val = max * (1 - ratio);
+        const yy = pad.top + ratio * (height - pad.top - pad.bottom);
+        grid.push(`<line x1="${pad.left}" y1="${yy}" x2="${width - pad.right}" y2="${yy}" stroke="#d7e3f1" stroke-dasharray="4 5"/>`);
+        grid.push(`<text x="${pad.left - 8}" y="${yy + 4}" text-anchor="end" font-size="11" fill="#5e738a">${fmtMoneyShort(val)}</text>`);
+      }
+
+      const labelsStep = Math.max(1, Math.floor(points.length / 8));
+      const labels = points.map((p, i) => {
+        if (i % labelsStep !== 0 && i !== points.length - 1) return '';
+        return `<text x="${x(i)}" y="${height - 12}" text-anchor="middle" font-size="11" fill="#607892">${p.label}</text>`;
       }).join('');
 
       return `
-        <div class="table-responsive">
-          <table class="table table-sm align-middle mb-0">
+        <div class="chart-wrap">
+          <svg viewBox="0 0 ${width} ${height}" width="100%" height="260" aria-label="План vs факт">
+            ${grid.join('')}
+            <polygon points="${factArea}" fill="rgba(18,138,74,.13)"></polygon>
+            <polyline points="${line('plan')}" fill="none" stroke="#1458d7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            <polyline points="${line('fact')}" fill="none" stroke="#128a4a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            ${labels}
+          </svg>
+          <div class="chart-legend">
+            <span><i class="legend-dot" style="background:#1458d7"></i>План</span>
+            <span><i class="legend-dot" style="background:#128a4a"></i>Факт</span>
+            <span class="ms-auto">План: <strong>${fmtMoney(series.planTotal)}</strong> · Факт: <strong>${fmtMoney(series.factTotal)}</strong></span>
+          </div>
+        </div>
+      `;
+    }
+
+    function buildSourcesTableHtml(rows) {
+      if (!rows || !rows.length) return '<div class="muted-note">Немає даних.</div>';
+
+      return `
+        <div class="table-wrap">
+          <table class="table table-sm align-middle">
             <thead>
               <tr>
-                <th>Джерело</th>
-                <th>Ліди</th>
-                <th>Замовлення</th>
-                <th>Сума</th>
+                <th class="sticky-first">Джерело</th>
+                <th>Ліди створ.</th>
+                <th>Лід. товари</th>
+                <th>Лід. сума</th>
+                <th>Чуйка лід. (шт/₴)</th>
+                <th>Замовл. створ.</th>
+                <th>Замовл. товари</th>
+                <th>Замовл. сума</th>
+                <th>Чуйка зам. (шт/₴)</th>
+                <th>Заверш. зам.</th>
+                <th>Заверш. товари</th>
+                <th>Оплати заверш.</th>
               </tr>
             </thead>
-            <tbody>${tbody}</tbody>
+            <tbody>
+              ${rows.map((r) => {
+                const m = r.metrics;
+                return `
+                  <tr>
+                    <td class="sticky-first fw-bold">${escapeHtml(r.source)}</td>
+                    <td>${fmtNumber(m.leadsCreated)}</td>
+                    <td>${fmtNumber(m.leadsItems)}</td>
+                    <td>${fmtMoney(m.leadsAmount)}</td>
+                    <td>${fmtNumber(m.leadsChuykaItems)} / ${fmtMoney(m.leadsChuykaAmount)}</td>
+                    <td>${fmtNumber(m.ordersCreated)}</td>
+                    <td>${fmtNumber(m.ordersItems)}</td>
+                    <td>${fmtMoney(m.ordersAmount)}</td>
+                    <td>${fmtNumber(m.ordersChuykaItems)} / ${fmtMoney(m.ordersChuykaAmount)}</td>
+                    <td>${fmtNumber(m.ordersCompleted)}</td>
+                    <td>${fmtNumber(m.ordersCompletedItems)}</td>
+                    <td>${fmtMoney(m.ordersCompletedPaid)}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
           </table>
         </div>
       `;
     }
 
-    function buildGa4Table(rows) {
-      if (!rows || !rows.length) return '<div class="text-muted">Немає даних</div>';
-      const tbody = rows.map(r => `
-        <tr>
-          <td class="fw-bold">${formatDate(r.date)}</td>
-          <td>${r.source || '-'}</td>
-          <td>${formatNumber(r.total)}</td>
-          <td>${formatNumber(r.newUsers)}</td>
-          <td>${formatNumber(r.returning)}</td>
-          <td>${formatNumber(r.impressions)}</td>
-          <td>${formatNumber(r.engagedPerUser)}</td>
-          <td>${formatNumber(r.events)}</td>
-          <td>${formatNumber(r.keyEvents)}</td>
-          <td>${formatNumber(r.keyShare)}</td>
-        </tr>
-      `).join('');
+    function buildDailyTableHtml(rows) {
+      if (!rows || !rows.length) return '<div class="muted-note">Немає даних.</div>';
 
       return `
-        <div class="table-responsive">
-          <table class="table table-sm align-middle mb-0">
+        <div class="table-wrap">
+          <table class="table table-sm align-middle">
             <thead>
               <tr>
-                <th>Дата</th>
-                <th>Источник</th>
-                <th>Всего пользователей</th>
-                <th>Новые пользователи</th>
-                <th>Вернувшиеся пользователи</th>
-                <th>Показы</th>
-                <th>Сеансы/польз.</th>
-                <th>События</th>
-                <th>Ключевые</th>
-                <th>Доля ключевых (%)</th>
-              </tr>
-            </thead>
-            <tbody>${tbody}</tbody>
-          </table>
-        </div>
-      `;
-    }
-
-    function buildDailyTable(rows) {
-      if (!rows || !rows.length) return '<div class="text-muted">Немає даних</div>';
-      const tbody = rows.map(r => `
-        <tr>
-          <td class="fw-bold">${r.date}</td>
-          <td>${formatNumber(r.processedLeads)}</td>
-          <td>${formatNumber(r.processedSuccess)}</td>
-          <td>${formatNumber(r.leadItems)}</td>
-          <td>${formatMoney(r.leadItemsSum)}</td>
-          <td>${formatNumber(r.orders)}</td>
-          <td>${formatNumber(r.orderItems)}</td>
-          <td>${formatMoney(r.orderItemsSum)}</td>
-          <td>${formatNumber(r.closedOrders)}</td>
-          <td>${formatMoney(r.closedSum)}</td>
-        </tr>
-      `).join('');
-
-      return `
-        <div class="table-responsive">
-          <table class="table table-sm align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Дата</th>
-                <th>Оброблені ліди</th>
+                <th class="sticky-first">Дата</th>
+                <th>Ліди створ.</th>
+                <th>Лід. товари</th>
+                <th>Лід. сума</th>
+                <th>Оброблено</th>
                 <th>Успішні</th>
-                <th>Товари в лідах</th>
-                <th>Сума в лідах</th>
-                <th>Замовлення</th>
-                <th>Товари в замовл.</th>
-                <th>Сума в замовл.</th>
-                <th>Закриті</th>
-                <th>Сума закритих</th>
+                <th>Усп. товари</th>
+                <th>Усп. сума</th>
+                <th>Замовл. створ.</th>
+                <th>Товари</th>
+                <th>Сума</th>
+                <th>Заверш. зам.</th>
+                <th>Оплати заверш.</th>
               </tr>
             </thead>
-            <tbody>${tbody}</tbody>
+            <tbody>
+              ${rows.map((row) => {
+                const m = row.metrics;
+                return `
+                  <tr>
+                    <td class="sticky-first fw-bold">${formatDateLong(row.date)}</td>
+                    <td>${fmtNumber(m.leadsCreated)}</td>
+                    <td>${fmtNumber(m.leadsItems)}</td>
+                    <td>${fmtMoney(m.leadsAmount)}</td>
+                    <td>${fmtNumber(m.leadsProcessed)}</td>
+                    <td>${fmtNumber(m.leadsSuccess)}</td>
+                    <td>${fmtNumber(m.leadsSuccessItems)}</td>
+                    <td>${fmtMoney(m.leadsSuccessAmount)}</td>
+                    <td>${fmtNumber(m.ordersCreated)}</td>
+                    <td>${fmtNumber(m.ordersItems)}</td>
+                    <td>${fmtMoney(m.ordersAmount)}</td>
+                    <td>${fmtNumber(m.ordersCompleted)}</td>
+                    <td>${fmtMoney(m.ordersCompletedPaid)}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
           </table>
         </div>
       `;
     }
 
-    function buildManagersTable(rows) {
-      if (!rows || rows.length === 0) return '';
-
-      const tbody = rows.map(r => {
-        const m = r.metrics || {};
-        return `
-          <tr>
-            <td class="fw-bold">${r.manager}</td>
-            <td>${formatNumber(m.leads?.total)}</td>
-            <td>${formatNumber(m.closed?.count)}</td>
-            <td>${formatMoney(m.closed?.sum)}</td>
-            <td>${formatPercent(m.conversion?.leadToOrder)}</td>
-          </tr>
-        `;
-      }).join('');
+    function buildManagersTableHtml(rows) {
+      if (!rows || !rows.length) return '<div class="muted-note">Немає даних.</div>';
 
       return `
-        <div class="card p-3">
-          <div class="fw-bold mb-2">По менеджерам</div>
-          <div class="table-responsive">
-            <table class="table table-sm align-middle mb-0">
-              <thead>
-                <tr>
-                  <th>Менеджер</th>
-                  <th>Ліди</th>
-                  <th>Замовлення</th>
-                  <th>Сума</th>
-                  <th>Конверсія</th>
-                </tr>
-              </thead>
-              <tbody>${tbody}</tbody>
-            </table>
-          </div>
+        <div class="table-wrap">
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th class="sticky-first">Менеджер</th>
+                <th>Ліди створ.</th>
+                <th>Оброблено</th>
+                <th>Успішні</th>
+                <th>Замовл. створ.</th>
+                <th>Сума замовл.</th>
+                <th>Заверш. зам.</th>
+                <th>Оплати заверш.</th>
+                <th>Сер. чек</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map((r) => {
+                const m = r.metrics;
+                return `
+                  <tr>
+                    <td class="sticky-first fw-bold">${escapeHtml(r.manager)}</td>
+                    <td>${fmtNumber(m.leadsCreated)}</td>
+                    <td>${fmtNumber(m.leadsProcessed)}</td>
+                    <td>${fmtNumber(m.leadsSuccess)}</td>
+                    <td>${fmtNumber(m.ordersCreated)}</td>
+                    <td>${fmtMoney(m.ordersAmount)}</td>
+                    <td>${fmtNumber(m.ordersCompleted)}</td>
+                    <td>${fmtMoney(m.ordersCompletedPaid)}</td>
+                    <td>${fmtMoney(m.avgCheck)}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
         </div>
       `;
+    }
+
+    function applyPreset(preset) {
+      const today = new Date();
+      let start;
+      let end;
+
+      if (preset === 'week') {
+        end = new Date(today);
+        start = new Date(today);
+        const day = start.getDay() === 0 ? 7 : start.getDay();
+        start.setDate(start.getDate() - day + 1);
+      } else if (preset === 'month') {
+        end = new Date(today);
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+      } else {
+        start = new Date(today);
+        start.setDate(start.getDate() - 1);
+        end = new Date(start);
+        preset = 'day';
+      }
+
+      state.range.preset = preset;
+      state.range.start = toDateKey(start);
+      state.range.end = toDateKey(end);
+
+      state.picker.tempStart = state.range.start;
+      state.picker.tempEnd = state.range.end;
+      state.picker.viewMonth = new Date(start.getFullYear(), start.getMonth(), 1);
+
+      highlightPresetButtons();
+      updateDatePopoverRangeText();
+      updateRangeTexts();
+      toggleDatePopover(false);
+      ensureDataLoaded(false).then(renderFromCache).catch(handleUiError);
+    }
+
+    function toggleDatePopover(show) {
+      const pop = document.getElementById('datePopover');
+      state.picker.visible = !!show;
+      if (!show) {
+        pop.classList.add('d-none');
+        return;
+      }
+
+      state.picker.tempStart = state.range.start;
+      state.picker.tempEnd = state.range.end;
+      state.picker.viewMonth = new Date(fromDateKey(state.range.start).getFullYear(), fromDateKey(state.range.start).getMonth(), 1);
+
+      renderCalendar();
+      highlightPresetButtons();
+      updateDatePopoverRangeText();
+      pop.classList.remove('d-none');
+    }
+
+    function shiftCalendarMonth(delta) {
+      const vm = state.picker.viewMonth;
+      state.picker.viewMonth = new Date(vm.getFullYear(), vm.getMonth() + delta, 1);
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const vm = state.picker.viewMonth;
+      const year = vm.getFullYear();
+      const month = vm.getMonth();
+      const first = new Date(year, month, 1);
+      const last = new Date(year, month + 1, 0);
+      const offset = (first.getDay() + 6) % 7;
+
+      document.getElementById('calTitle').textContent = monthTitle(vm);
+      document.getElementById('calWeekdays').innerHTML = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
+        .map((d) => `<div class="cal-weekday">${d}</div>`).join('');
+
+      const cells = [];
+      for (let i = 0; i < offset; i++) cells.push(null);
+      for (let d = 1; d <= last.getDate(); d++) cells.push(new Date(year, month, d));
+      while (cells.length < 42) cells.push(null);
+
+      const start = state.picker.tempStart;
+      const end = state.picker.tempEnd || start;
+
+      document.getElementById('calDays').innerHTML = cells.map((date) => {
+        if (!date) return '<button class="cal-day muted" type="button" disabled></button>';
+
+        const key = toDateKey(date);
+        const isStart = start && key === start;
+        const isEnd = end && key === end;
+        const inRange = start && end && key >= start && key <= end;
+
+        let cls = 'cal-day';
+        if (isStart) cls += ' start';
+        if (isEnd && end !== start) cls += ' end';
+        if (inRange) cls += ' in-range';
+
+        return `<button class="${cls}" type="button" data-date="${key}">${date.getDate()}</button>`;
+      }).join('');
+
+      document.querySelectorAll('#calDays [data-date]').forEach((btn) => {
+        btn.addEventListener('click', () => onCalendarDayClick(btn.dataset.date));
+      });
+    }
+
+    function onCalendarDayClick(key) {
+      if (!state.picker.tempStart || (state.picker.tempStart && state.picker.tempEnd)) {
+        state.picker.tempStart = key;
+        state.picker.tempEnd = '';
+      } else {
+        if (key < state.picker.tempStart) {
+          state.picker.tempEnd = state.picker.tempStart;
+          state.picker.tempStart = key;
+        } else {
+          state.picker.tempEnd = key;
+        }
+      }
+
+      state.range.preset = 'custom';
+      highlightPresetButtons();
+      renderCalendar();
+      updateDatePopoverRangeText();
+    }
+
+    function applyDateSelection() {
+      if (!state.picker.tempStart) {
+        showToast('Оберіть дату або діапазон');
+        return;
+      }
+
+      state.range.start = state.picker.tempStart;
+      state.range.end = state.picker.tempEnd || state.picker.tempStart;
+      state.range.preset = 'custom';
+
+      updateRangeTexts();
+      toggleDatePopover(false);
+      ensureDataLoaded(false).then(renderFromCache).catch(handleUiError);
+    }
+
+    function updateDatePopoverRangeText() {
+      const start = state.picker.tempStart;
+      const end = state.picker.tempEnd || state.picker.tempStart;
+      const text = start ? `${formatDateLong(start)} — ${formatDateLong(end)}` : 'Оберіть дату';
+      document.getElementById('dateRangeText').textContent = text;
+    }
+
+    function updateRangeTexts() {
+      const label = `${formatDateLong(state.range.start)} — ${formatDateLong(state.range.end)}`;
+      document.getElementById('dateTriggerLabel').textContent = label;
+    }
+
+    function highlightPresetButtons() {
+      document.querySelectorAll('[data-preset]').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.preset === state.range.preset);
+      });
+    }
+
+    function monthTitle(date) {
+      return date.toLocaleDateString('uk-UA', { month: 'long', year: 'numeric' });
     }
 
     async function apiGet(params) {
       if (DEBUG) params.debug = '1';
-      const query = new URLSearchParams(params).toString();
-      const url = `${API_URL}?${query}`;
+      const q = new URLSearchParams(params).toString();
+      const url = `${API_URL}?${q}`;
       if (DEBUG) pushDebug('GET ' + url);
       const res = await fetch(url);
       return await res.json();
     }
 
-    function formatNumber(value) {
-      const num = Number(value) || 0;
-      return num.toLocaleString('uk-UA');
+    function showErrorCard(msg) {
+      document.getElementById('appContent').innerHTML = `<div class="alert alert-danger">${msg}</div>`;
     }
 
-    function formatMoney(value) {
-      const num = Number(value) || 0;
-      return num.toLocaleString('uk-UA') + ' ₴';
-    }
-
-    function formatPercent(value) {
-      const num = Number(value) || 0;
-      return (num * 100).toFixed(1) + '%';
-    }
-
-    function formatDate(value) {
-      if (!value) return '';
-      try {
-        const d = new Date(value);
-        if (isNaN(d.getTime())) return String(value);
-        return d.toLocaleDateString('uk-UA');
-      } catch (e) {
-        return String(value);
-      }
+    function handleUiError(err) {
+      console.error(err);
+      showToast('Помилка: ' + (err && err.message ? err.message : String(err)));
+      pushDebug('UI error: ' + String(err));
+      showDebugIfNeeded();
     }
 
     function showToast(msg) {
-      document.getElementById('toastMessage').innerText = msg;
+      document.getElementById('toastMessage').textContent = msg;
       toastInstance.show();
     }
 
-    function forceReload() {
-      loadStats();
-    }
-
-    function pushDebug(text) {
+    function pushDebug(line) {
       if (!DEBUG) return;
-      if (Array.isArray(text)) {
-        text.forEach(t => debugLines.push(String(t)));
-      } else {
-        debugLines.push(String(text));
-      }
+      if (Array.isArray(line)) line.forEach((x) => state.debugLines.push(String(x)));
+      else state.debugLines.push(String(line));
     }
 
-    function showDebug() {
+    function showDebugIfNeeded() {
       if (!DEBUG) return;
       const panel = document.getElementById('debugPanel');
-      const body = document.getElementById('debugBody');
-      const meta = document.getElementById('debugMeta');
       panel.classList.remove('d-none');
-      body.textContent = debugLines.join('\n');
-      meta.textContent = 'API: ' + API_URL;
+      document.getElementById('debugMeta').textContent = 'API: ' + API_URL;
+      document.getElementById('debugBody').textContent = state.debugLines.join('\n');
     }
 
-    function toggleDebug(show) {
-      const panel = document.getElementById('debugPanel');
-      if (!panel) return;
-      if (show) panel.classList.remove('d-none');
-      else panel.classList.add('d-none');
+    function totalRowsCount(res) {
+      const ds = res && res.datasets ? res.datasets : {};
+      return (ds.ordersCreated || []).length + (ds.ordersCompleted || []).length + (ds.leadsCreated || []).length + (ds.leadsUpdated || []).length + (ds.ga4 || []).length;
+    }
+
+    function num(v) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function fmtNumber(v) {
+      return num(v).toLocaleString('uk-UA');
+    }
+
+    function fmtMoney(v) {
+      return num(v).toLocaleString('uk-UA', { maximumFractionDigits: 0 }) + ' ₴';
+    }
+
+    function fmtMoneyShort(v) {
+      const n = num(v);
+      if (n >= 1000000) return (n / 1000000).toFixed(1) + 'м';
+      if (n >= 1000) return (n / 1000).toFixed(0) + 'к';
+      return n.toFixed(0);
+    }
+
+    function fmtPercent(v) {
+      return (num(v) * 100).toFixed(1) + '%';
+    }
+
+    function toDateKey(d) {
+      const dt = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+    }
+
+    function fromDateKey(key) {
+      if (!key) return null;
+      const p = String(key).split('-');
+      if (p.length !== 3) return null;
+      return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    }
+
+    function formatDateLong(key) {
+      const d = fromDateKey(key);
+      return d ? d.toLocaleDateString('uk-UA') : key;
+    }
+
+    function formatDateShort(key) {
+      const d = fromDateKey(key);
+      if (!d) return key;
+      return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function percentToColor(ratio) {
+      const x = Math.max(0, Math.min(1.2, num(ratio)));
+      const clamped = Math.max(0, Math.min(1, x));
+      const r = Math.round(216 - (216 - 26) * clamped);
+      const g = Math.round(60 + (157 - 60) * clamped);
+      const b = Math.round(60 - (60 - 46) * clamped);
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
   </script>
 </body>
