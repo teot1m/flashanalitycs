@@ -62,13 +62,15 @@ async function handleStart(chatId, userId, botToken, apiUrl, dashboardUrl) {
     return;
   }
 
-  const access = await apiGet(apiUrl, { action: 'getAccess', userId: String(userId), force: '1' });
-  if (!access || access.error) {
+  let access = null;
+  try {
+    access = await apiGet(apiUrl, { action: 'getAccess', userId: String(userId), force: '1' });
+  } catch (e) {
     await sendMessage(botToken, chatId, 'Помилка доступу. Спробуйте пізніше.');
     return;
   }
 
-  if (!access.allowed && access.error === 'not_found') {
+  if (access && access.error === 'not_found') {
     const registerUrl = `${dashboardUrl}/?register=1&userid=${encodeURIComponent(String(userId))}`;
     const replyMarkup = {
       keyboard: [[{ text: 'Реєстрація', web_app: { url: registerUrl } }]],
@@ -76,6 +78,11 @@ async function handleStart(chatId, userId, botToken, apiUrl, dashboardUrl) {
       one_time_keyboard: true
     };
     await sendMessage(botToken, chatId, 'Вас ще немає в системі. Натисніть кнопку Реєстрація та оберіть менеджера.', replyMarkup);
+    return;
+  }
+
+  if (!access || access.error) {
+    await sendMessage(botToken, chatId, 'Помилка доступу. Спробуйте пізніше.');
     return;
   }
 
