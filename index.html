@@ -809,6 +809,7 @@
 
     async function init() {
       if (isRegisterPage()) {
+        toastInstance = new bootstrap.Toast(document.getElementById('liveToast'), { delay: 2600 });
         initRegisterPage();
         return;
       }
@@ -1912,6 +1913,35 @@
         </div>
       `;
 
+      if (!USER_ID) {
+        showErrorCard('Не вказано User ID');
+        return;
+      }
+
+      try {
+        const access = await apiGet({ action: 'getAccess', userId: USER_ID });
+        if (access && access.manager) {
+          if (access.role) {
+            document.getElementById('appContent').innerHTML = `
+              <div class="panel-card p-3">
+                <div class="section-title">Доступ активний</div>
+                <div class="muted-note">Ваш доступ уже підтверджено.</div>
+              </div>
+            `;
+            return;
+          }
+          document.getElementById('appContent').innerHTML = `
+            <div class="panel-card p-3">
+              <div class="section-title">Заявка на розгляді</div>
+              <div class="muted-note">Ваша заявка вже відправлена. Очікуйте підтвердження.</div>
+            </div>
+          `;
+          return;
+        }
+      } catch (e) {
+        // ignore access errors and still allow registration
+      }
+
       try {
         const res = await apiGet({ action: 'getManagersList', excludeUsed: '1' });
         const list = (res && res.managers && res.managers.length) ? res.managers : [];
@@ -1950,7 +1980,7 @@
 
       if (res && res.ok) {
         showToast('Заявка відправлена.');
-        if (hint) hint.textContent = 'Заявка відправлена. Очікуйте підтвердження.';
+        if (hint) hint.textContent = 'Заявка на розгляді. Очікуйте підтвердження.';
         const btn = document.getElementById('registerSubmit');
         if (btn) btn.disabled = true;
       } else {
@@ -1983,7 +2013,9 @@
 
     function showToast(msg) {
       document.getElementById('toastMessage').textContent = msg;
-      toastInstance.show();
+      if (toastInstance && typeof toastInstance.show === 'function') {
+        toastInstance.show();
+      }
     }
 
     function pushDebug(line) {
