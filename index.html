@@ -808,6 +808,10 @@
     window.addEventListener('load', init);
 
     async function init() {
+      if (isRegisterPage()) {
+        initRegisterPage();
+        return;
+      }
       toastInstance = new bootstrap.Toast(document.getElementById('liveToast'), { delay: 2600 });
       bindEvents();
       initDefaultRange();
@@ -1884,6 +1888,49 @@
       if (DEBUG) pushDebug('GET ' + url);
       const res = await fetch(url);
       return await res.json();
+    }
+
+    function isRegisterPage() {
+      return window.location.pathname.endsWith('/register') || window.location.pathname.endsWith('/register/');
+    }
+
+    async function initRegisterPage() {
+      document.getElementById('filtersCard').classList.add('d-none');
+      document.getElementById('uiUserRole').textContent = 'Реєстрація';
+      document.getElementById('uiUserName').textContent = 'Виберіть менеджера';
+      document.getElementById('appContent').innerHTML = `
+        <div class="panel-card p-3">
+          <div class="section-title">Реєстрація</div>
+          <div class="mb-3">
+            <label class="field-label">Менеджер</label>
+            <select class="field-select" id="registerManager"></select>
+          </div>
+          <button class="btn btn-dark w-100" id="registerSubmit">Зареєструватись</button>
+          <div class="muted-note mt-2" id="registerHint">Після відправки заявка буде на розгляді.</div>
+        </div>
+      `;
+
+      try {
+        const res = await apiGet({ action: 'getManagersList' });
+        const list = (res && res.managers && res.managers.length) ? res.managers : [];
+        const select = document.getElementById('registerManager');
+        select.innerHTML = list.map((m) => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+        document.getElementById('registerSubmit').addEventListener('click', () => submitRegistration());
+      } catch (e) {
+        showErrorCard('Не вдалося завантажити список менеджерів');
+      }
+    }
+
+    function submitRegistration() {
+      const select = document.getElementById('registerManager');
+      if (!select || !select.value) return;
+      const payload = { manager: select.value, userId: USER_ID || '' };
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify(payload));
+        window.Telegram.WebApp.close();
+      } else {
+        showToast('Дані відправлено. Поверніться в Telegram.');
+      }
     }
 
     function showErrorCard(msg) {
