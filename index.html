@@ -777,7 +777,7 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzxOb7aq6buRdyVH0W-XICmFbbhbVzrS68RQVLR9Cyg0g89tP2qfh5qhdZ-qwbBMfqf0w/exec";
     const urlParams = new URLSearchParams(window.location.search);
-    const USER_ID = urlParams.get('userid');
+    const USER_ID = urlParams.get('userid') || urlParams.get('userId') || urlParams.get('uid');
     const DEBUG = urlParams.get('debug') === '1';
 
     const state = {
@@ -785,8 +785,8 @@
       baseData: null,
       dataKey: '',
       filters: {
-        source: 'усього',
-        manager: 'усього'
+        source: 'Усього',
+        manager: 'Усього'
       },
       range: {
         preset: 'day',
@@ -1891,6 +1891,7 @@
     }
 
     function isRegisterPage() {
+      if (urlParams.get('register') === '1') return true;
       return window.location.pathname.endsWith('/register') || window.location.pathname.endsWith('/register/');
     }
 
