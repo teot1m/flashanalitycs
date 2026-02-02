@@ -1914,7 +1914,7 @@
       `;
 
       try {
-        const res = await apiGet({ action: 'getManagersList' });
+        const res = await apiGet({ action: 'getManagersList', excludeUsed: '1' });
         const list = (res && res.managers && res.managers.length) ? res.managers : [];
         const select = document.getElementById('registerManager');
         select.innerHTML = list.map((m) => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
@@ -1944,6 +1944,9 @@
           // ignore
         }
         window.Telegram.WebApp.sendData(JSON.stringify(payload));
+        apiGet({ action: 'register', userId: USER_ID || '', manager: select.value })
+          .then(() => {})
+          .catch(() => {});
         const hint = document.getElementById('registerHint');
         if (hint) hint.textContent = 'Дані відправлено. Очікуйте підтвердження.';
         const btn = document.getElementById('registerSubmit');
@@ -1954,9 +1957,21 @@
           // ignore
         }
       } else {
-        showToast('Це вікно потрібно відкривати з Telegram. Натисніть кнопку в боті.');
-        const hint = document.getElementById('registerHint');
-        if (hint) hint.textContent = 'Відкрийте форму з Telegram. У браузері відправка не працює.';
+        apiGet({ action: 'register', userId: USER_ID || '', manager: select.value })
+          .then((res) => {
+            if (res && res.ok) {
+              showToast('Заявка відправлена.');
+              const hint = document.getElementById('registerHint');
+              if (hint) hint.textContent = 'Заявка відправлена. Очікуйте підтвердження.';
+              const btn = document.getElementById('registerSubmit');
+              if (btn) btn.disabled = true;
+            } else {
+              showToast('Помилка: ' + (res && res.error ? res.error : 'невідомо'));
+            }
+          })
+          .catch(() => {
+            showToast('Помилка відправки. Спробуйте з Telegram.');
+          });
       }
     }
 
