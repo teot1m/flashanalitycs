@@ -11,3 +11,4 @@
 !api/
 !api/telegram.js
 !vercel.json
+!env.local
