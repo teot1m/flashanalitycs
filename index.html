@@ -1109,6 +1109,12 @@
       const orderCreatedSet = new Set();
       (data.ordersCreated || []).forEach((row) => {
         if (row.id) orderCreatedSet.add(row.id);
+        m.ordersItems += num(row.qty);
+        m.ordersAmount += num(row.amount);
+        if (row.chuyka) {
+          m.ordersChuykaItems += num(row.qty);
+          m.ordersChuykaAmount += num(row.amount);
+        }
       });
       m.ordersCreated = orderCreatedSet.size;
 
