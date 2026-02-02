@@ -1926,13 +1926,37 @@
 
     function submitRegistration() {
       const select = document.getElementById('registerManager');
-      if (!select || !select.value) return;
+      if (!select || !select.value) {
+        showToast('Оберіть менеджера зі списку.');
+        return;
+      }
+      if (!USER_ID) {
+        showToast('Немає userid у посиланні. Відкрийте форму з Telegram.');
+        const hint = document.getElementById('registerHint');
+        if (hint) hint.textContent = 'Помилка: немає userid у посиланні. Відкрийте цю форму з кнопки бота.';
+        return;
+      }
       const payload = { manager: select.value, userId: USER_ID || '' };
       if (window.Telegram && window.Telegram.WebApp) {
+        try {
+          window.Telegram.WebApp.ready();
+        } catch (e) {
+          // ignore
+        }
         window.Telegram.WebApp.sendData(JSON.stringify(payload));
-        window.Telegram.WebApp.close();
+        const hint = document.getElementById('registerHint');
+        if (hint) hint.textContent = 'Дані відправлено. Очікуйте підтвердження.';
+        const btn = document.getElementById('registerSubmit');
+        if (btn) btn.disabled = true;
+        try {
+          window.Telegram.WebApp.close();
+        } catch (e) {
+          // ignore
+        }
       } else {
-        showToast('Дані відправлено. Поверніться в Telegram.');
+        showToast('Це вікно потрібно відкривати з Telegram. Натисніть кнопку в боті.');
+        const hint = document.getElementById('registerHint');
+        if (hint) hint.textContent = 'Відкрийте форму з Telegram. У браузері відправка не працює.';
       }
     }
 
