@@ -1899,11 +1899,10 @@
       document.getElementById('filtersCard').classList.add('d-none');
       document.getElementById('uiUserRole').textContent = 'Реєстрація';
       document.getElementById('uiUserName').textContent = 'Виберіть менеджера';
-      const regUrl = window.location.href;
       document.getElementById('appContent').innerHTML = `
         <div class="panel-card p-3">
           <div class="section-title">Реєстрація</div>
-          <div class="small text-muted mb-2">URL: ${escapeHtml(regUrl)}</div>
+          <div class="small text-muted mb-2">Оберіть свого менеджера зі списку.</div>
           <div class="mb-3">
             <label class="field-label">Менеджер</label>
             <select class="field-select" id="registerManager"></select>
