@@ -989,7 +989,7 @@
       const currentMetrics = computeMetrics(currentData);
       const previousMetrics = computeMetrics(previousData);
 
-      const series = buildPlanFactSeries(currentData.ordersCreated, current.start, current.end, state.baseData.plan ? state.baseData.plan.monthly : {});
+      const series = buildPlanFactSeries(currentData.ordersCompleted, current.start, current.end, state.baseData.plan ? state.baseData.plan.monthly : {});
       currentMetrics.planSales = series.planTotal;
       previousMetrics.planSales = calcPlanTotalForRange(previous.start, previous.end, state.baseData.plan ? state.baseData.plan.monthly : {});
       const sourcesRows = buildSourceRows(current.start, current.end);
@@ -1109,15 +1109,16 @@
       const orderCreatedSet = new Set();
       (data.ordersCreated || []).forEach((row) => {
         if (row.id) orderCreatedSet.add(row.id);
-        m.ordersItems += num(row.qty);
-        m.ordersAmount += num(row.amount);
-        if (row.chuyka) {
-          m.ordersChuykaItems += num(row.qty);
-          m.ordersChuykaAmount += num(row.amount);
-        }
       });
       m.ordersCreated = orderCreatedSet.size;
-      m.factSales = m.ordersAmount;
+
+      // Fact = closed orders (status 5) by completion date, paid sum
+      let factSum = 0;
+      (data.ordersCompleted || []).forEach((row) => {
+        if (String(row.statusGroup) !== '5') return;
+        factSum += num(row.paid) || num(row.amount);
+      });
+      m.factSales = factSum;
 
       const completedSet = new Set();
       (data.ordersCompleted || []).forEach((row) => {
@@ -1133,14 +1134,15 @@
       return m;
     }
 
-    function buildPlanFactSeries(ordersCreatedRows, startKey, endKey, monthPlanMap) {
+    function buildPlanFactSeries(ordersCompletedRows, startKey, endKey, monthPlanMap) {
       const start = fromDateKey(startKey);
       const end = fromDateKey(endKey);
       if (!start || !end) return { points: [], max: 0, planTotal: 0, factTotal: 0 };
 
       const factByDate = {};
-      (ordersCreatedRows || []).forEach((row) => {
-        factByDate[row.date] = (factByDate[row.date] || 0) + num(row.amount);
+      (ordersCompletedRows || []).forEach((row) => {
+        if (String(row.statusGroup) !== '5') return;
+        factByDate[row.date] = (factByDate[row.date] || 0) + (num(row.paid) || num(row.amount));
       });
 
       const points = [];
