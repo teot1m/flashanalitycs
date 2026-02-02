@@ -1108,6 +1108,7 @@
 
       const orderCreatedSet = new Set();
       (data.ordersCreated || []).forEach((row) => {
+        if (String(row.statusGroup) === '6') return;
         if (row.id) orderCreatedSet.add(row.id);
         m.ordersItems += num(row.qty);
         m.ordersAmount += num(row.amount);
