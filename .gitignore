@@ -6,3 +6,8 @@
 
 # Allow only the front-end file for GitHub Pages
 !index.html
+!register/
+!register/index.html
+!api/
+!api/telegram.js
+!vercel.json
