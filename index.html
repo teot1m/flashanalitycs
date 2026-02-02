@@ -1673,8 +1673,8 @@
             </thead>
             <tbody>
               ${rows.map((r) => {
-                const m = r.metrics;
-                return `
+        const m = r.metrics;
+        return `
                   <tr>
                     <td class="sticky-first fw-bold">${escapeHtml(r.manager)}</td>
                     <td>${fmtNumber(m.leadsCreated)}</td>
@@ -1690,7 +1690,7 @@
                     <td>${fmtMoney(m.avgCheck)}</td>
                   </tr>
                 `;
-              }).join('')}
+      }).join('')}
             </tbody>
           </table>
         </div>
