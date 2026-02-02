@@ -989,12 +989,14 @@
       const currentMetrics = computeMetrics(currentData);
       const previousMetrics = computeMetrics(previousData);
 
-      const series = buildPlanFactSeries(currentData.ordersCompleted, current.start, current.end, state.baseData.plan ? state.baseData.plan.monthly : {});
-      currentMetrics.planSales = series.planTotal;
-      previousMetrics.planSales = calcPlanTotalForRange(previous.start, previous.end, state.baseData.plan ? state.baseData.plan.monthly : {});
+      const planMap = state.baseData.plan ? state.baseData.plan.monthly : {};
+      const planManagers = resolvePlanManagers();
+      const series = buildPlanFactSeries(currentData.ordersCompleted, current.start, current.end, planMap, planManagers);
+      currentMetrics.planSales = calcPlanTotalForRange(current.start, current.end, planMap, planManagers);
+      previousMetrics.planSales = calcPlanTotalForRange(previous.start, previous.end, planMap, planManagers);
       const sourcesRows = buildSourceRows(current.start, current.end);
       const dailyRows = buildDailyRows(current.start, current.end);
-      const managerRows = state.access.role === 'Керівник' ? buildManagerRows(current.start, current.end) : [];
+      const managerRows = state.access.role === 'Керівник' ? buildManagerRows(current.start, current.end, planMap) : [];
       state.chartSeries = series;
 
       document.getElementById('appContent').innerHTML = buildDashboardHtml({
@@ -1141,7 +1143,7 @@
       return m;
     }
 
-    function buildPlanFactSeries(ordersCompletedRows, startKey, endKey, monthPlanMap) {
+    function buildPlanFactSeries(ordersCompletedRows, startKey, endKey, monthPlanMap, managersFilter) {
       const start = fromDateKey(startKey);
       const end = fromDateKey(endKey);
       if (!start || !end) return { points: [], max: 0, planTotal: 0, factTotal: 0 };
@@ -1160,7 +1162,7 @@
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         const dateKey = toDateKey(d);
         const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        const monthlyPlan = num(monthPlanMap && monthPlanMap[monthKey]);
+        const monthlyPlan = num(resolvePlanForMonth(monthPlanMap, monthKey, managersFilter));
         const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
         const dailyPlan = daysInMonth > 0 ? monthlyPlan / daysInMonth : 0;
         const dailyFact = num(factByDate[dateKey]);
@@ -1188,7 +1190,7 @@
       };
     }
 
-    function calcPlanTotalForRange(startKey, endKey, monthPlanMap) {
+    function calcPlanTotalForRange(startKey, endKey, monthPlanMap, managersFilter) {
       const start = fromDateKey(startKey);
       const end = fromDateKey(endKey);
       if (!start || !end) return 0;
@@ -1196,7 +1198,7 @@
       let total = 0;
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        const monthlyPlan = num(monthPlanMap && monthPlanMap[monthKey]);
+        const monthlyPlan = num(resolvePlanForMonth(monthPlanMap, monthKey, managersFilter));
         const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
         total += daysInMonth > 0 ? (monthlyPlan / daysInMonth) : 0;
       }
@@ -1230,13 +1232,16 @@
       return rows;
     }
 
-    function buildManagerRows(startKey, endKey) {
+    function buildManagerRows(startKey, endKey, planMap) {
       const managers = ((state.baseData && state.baseData.options && state.baseData.options.managers) || [])
         .filter((m) => m && m !== 'усього');
 
       return managers.map((manager) => {
         const data = filterPeriodData(startKey, endKey, state.filters.source, manager);
-        return { manager, metrics: computeMetrics(data) };
+        const metrics = computeMetrics(data);
+        metrics.planSales = calcPlanTotalForRange(startKey, endKey, planMap, [manager]);
+        metrics.planPercent = metrics.planSales > 0 ? (metrics.factSales / metrics.planSales) : 0;
+        return { manager, metrics: metrics };
       }).sort((a, b) => a.manager.localeCompare(b.manager));
     }
 
@@ -1654,6 +1659,9 @@
                 <th>Успішні</th>
                 <th>Замовл. створ.</th>
                 <th>Сума замовл.</th>
+                <th>План</th>
+                <th>Факт</th>
+                <th>%</th>
                 <th>Заверш. зам.</th>
                 <th>Оплати заверш.</th>
                 <th>Сер. чек</th>
@@ -1661,8 +1669,8 @@
             </thead>
             <tbody>
               ${rows.map((r) => {
-        const m = r.metrics;
-        return `
+                const m = r.metrics;
+                return `
                   <tr>
                     <td class="sticky-first fw-bold">${escapeHtml(r.manager)}</td>
                     <td>${fmtNumber(m.leadsCreated)}</td>
@@ -1670,16 +1678,41 @@
                     <td>${fmtNumber(m.leadsSuccess)}</td>
                     <td>${fmtNumber(m.ordersCreated)}</td>
                     <td>${fmtMoney(m.ordersAmount)}</td>
+                    <td>${fmtMoney(m.planSales)}</td>
+                    <td>${fmtMoney(m.factSales)}</td>
+                    <td>${fmtPercent(m.planPercent)}</td>
                     <td>${fmtNumber(m.ordersCompleted)}</td>
                     <td>${fmtMoney(m.ordersCompletedPaid)}</td>
                     <td>${fmtMoney(m.avgCheck)}</td>
                   </tr>
                 `;
-      }).join('')}
+              }).join('')}
             </tbody>
           </table>
         </div>
       `;
+    }
+
+    function resolvePlanManagers() {
+      if (!state.access || !state.access.role) return [];
+      if (state.access.role !== 'Керівник') {
+        return [state.access.manager].filter(Boolean);
+      }
+      const current = state.filters.manager || 'усього';
+      if (!current || current === 'усього') return [];
+      return [current];
+    }
+
+    function resolvePlanForMonth(planMap, monthKey, managersFilter) {
+      if (!planMap || !monthKey) return 0;
+      const rec = planMap[monthKey];
+      if (!rec) return 0;
+      if (!managersFilter || managersFilter.length === 0) return num(rec.total);
+      let sum = 0;
+      managersFilter.forEach((m) => {
+        sum += num(rec.byManager && rec.byManager[m]);
+      });
+      return sum;
     }
 
     function applyPreset(preset) {
