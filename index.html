@@ -37,14 +37,61 @@
     }
 
     .page-shell {
+      width: 100%;
       max-width: 1220px;
+      margin-left: auto;
+      margin-right: auto;
+      --bs-gutter-x: 0;
+      padding-left: max(14px, env(safe-area-inset-left));
+      padding-right: max(14px, env(safe-area-inset-right));
+      box-sizing: border-box;
     }
 
     .panel-card {
       border: 1px solid var(--line);
-      border-radius: 18px;
+      border-radius: 20px;
       background: var(--card-bg);
       box-shadow: 0 8px 26px rgba(24, 43, 61, 0.06);
+    }
+
+    /* Keep the same spacing rhythm as the filters block */
+    #filtersCard {
+      padding: 16px !important;
+      margin-bottom: 12px !important;
+    }
+
+    #appContent {
+      display: grid;
+      gap: 12px;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    #appContent>.panel-card,
+    #appContent>details.panel-card {
+      padding: 16px !important;
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    #appContent>details.panel-card>summary {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .panel-card,
+    details.panel-card {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .chart-wrap svg {
+      display: block;
+      max-width: 100%;
     }
 
     .topline {
@@ -267,7 +314,7 @@
     .kpi-card {
       border: 1px solid var(--line);
       border-radius: 14px;
-      padding: 10px 12px;
+      padding: 12px 13px;
       background: #fff;
       min-height: 108px;
       min-width: 0;
@@ -366,6 +413,44 @@
       flex-wrap: wrap;
     }
 
+    .chart-dot-plan {
+      fill: #1458d7;
+    }
+
+    .chart-dot-fact {
+      fill: #128a4a;
+    }
+
+    .chart-stats {
+      margin-top: 8px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .chart-stat {
+      border: 1px solid #d4e0ed;
+      border-radius: 10px;
+      padding: 7px 9px;
+      background: #fff;
+    }
+
+    .chart-stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #6b8098;
+      font-weight: 700;
+    }
+
+    .chart-stat-value {
+      font-size: 16px;
+      font-weight: 800;
+      color: #1d3554;
+      line-height: 1.15;
+      margin-top: 2px;
+    }
+
     .legend-dot {
       width: 10px;
       height: 10px;
@@ -445,7 +530,7 @@
 
       .kpi-card {
         grid-column: span 6 !important;
-        min-height: 100px;
+        min-height: 98px;
       }
 
       .table-wrap {
@@ -456,6 +541,26 @@
     @media (max-width: 575px) {
       .kpi-grid {
         grid-template-columns: repeat(12, 1fr);
+      }
+
+      .kpi-grid-main .kpi-card {
+        grid-column: span 4 !important;
+        min-height: 88px;
+        padding: 10px 9px;
+      }
+
+      .kpi-grid-main .kpi-label {
+        font-size: 10px;
+        margin-bottom: 5px;
+      }
+
+      .kpi-grid-main .kpi-value {
+        font-size: 21px;
+        margin-bottom: 5px;
+      }
+
+      .kpi-grid-main .trend {
+        font-size: 11px;
       }
 
       .date-popover {
@@ -470,12 +575,32 @@
       .kpi-card {
         grid-column: span 12 !important;
       }
+
+      .chart-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .kpi-grid-3 .kpi-card {
+        grid-column: span 4 !important;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .kpi-grid-3 .kpi-card {
+        grid-column: span 6 !important;
+      }
+    }
+
+    @media (max-width: 340px) {
+      .kpi-grid-3 .kpi-card {
+        grid-column: span 12 !important;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div class="container page-shell">
+  <div class="page-shell">
     <div class="topline">
       <div>
         <div class="text-uppercase" style="font-size:11px;color:#6f8093;font-weight:700;letter-spacing:.05em;">Користувач</div>
@@ -541,7 +666,7 @@
       </div>
     </div>
 
-    <div id="appContent" class="d-grid" style="gap:10px;">
+    <div id="appContent">
       <div class="text-center py-5">
         <div class="spinner-border text-primary"></div>
       </div>
@@ -820,7 +945,8 @@
         ordersCompleted: (ds.ordersCompleted || []).filter((r) => passDate(r) && passManager(r) && passSource(r)),
         leadsCreated: (ds.leadsCreated || []).filter((r) => passDate(r) && passManager(r) && passSource(r)),
         leadsUpdated: (ds.leadsUpdated || []).filter((r) => passDate(r) && passManager(r) && passSource(r)),
-        ga4: (ds.ga4 || []).filter((r) => passDate(r) && passSource(r))
+        // GA4 KPI should be aggregated only by date (no source slicing).
+        ga4: (ds.ga4 || []).filter((r) => passDate(r))
       };
     }
 
@@ -1036,14 +1162,14 @@
       return `
         <div class="panel-card p-3">
           <div class="section-title">Основні показники</div>
-          <div class="kpi-grid">
+          <div class="kpi-grid kpi-grid-main">
             ${metricCard('Всього користувачів', fmtNumber(cm.visitorsTotal), trendHtml(cm.visitorsTotal, pm.visitorsTotal, true), 'span 3')}
             ${metricCard('Нові користувачі', fmtNumber(cm.visitorsNew), trendHtml(cm.visitorsNew, pm.visitorsNew, true), 'span 3')}
             ${metricCard('Повернувшіся користувачі', fmtNumber(cm.visitorsReturning), trendHtml(cm.visitorsReturning, pm.visitorsReturning, true), 'span 3')}
             ${metricCard('Середній чек', fmtMoney(cm.avgCheck), trendHtml(cm.avgCheck, pm.avgCheck, true), 'span 3')}
 
-            ${metricCard('План продажів', fmtMoney(cm.planSales), trendHtml(cm.planSales, pm.planSales, true), 'span 4', `<div class="kpi-sub">${escapeHtml(model.currentLabel)}</div>`)}
-            ${metricCard('Факт продажів', fmtMoney(cm.factSales), trendHtml(cm.factSales, pm.factSales, true), 'span 4')}
+            ${metricCard('План продажів', `<span title="План: ${fmtMoney(cm.planSales)}">${fmtMoney(cm.planSales)}</span>`, trendHtml(cm.planSales, pm.planSales, true), 'span 4')}
+            ${metricCard('Факт продажів', `<span title="Факт: ${fmtMoney(cm.factSales)}">${fmtMoney(cm.factSales)}</span>`, trendHtml(cm.factSales, pm.factSales, true), 'span 4')}
             ${metricCard('Виконання плану', fmtPercent(cm.planPercent), trendHtml(cm.planPercent, pm.planPercent, true), 'span 4', `
               <div class="plan-progress"><span style="width:${planBarWidth}%;background:${planBarColor};"></span></div>
             `)}
@@ -1054,7 +1180,7 @@
           <div class="section-title">Ліди</div>
           <div class="metric-band">
             <div class="metric-band-title">Створені</div>
-            <div class="kpi-grid">
+            <div class="kpi-grid kpi-grid-3">
               ${metricCard('Створено лідів', fmtNumber(cm.leadsCreated), trendHtml(cm.leadsCreated, pm.leadsCreated, true), 'span 4')}
               ${metricCard('Товарів у лідах', fmtNumber(cm.leadsItems), trendHtml(cm.leadsItems, pm.leadsItems, true), 'span 4')}
               ${metricCard('Сума товарів у лідах', fmtMoney(cm.leadsAmount), trendHtml(cm.leadsAmount, pm.leadsAmount, true), 'span 4')}
@@ -1062,13 +1188,13 @@
           </div>
           <div class="metric-band">
             <div class="metric-band-title">Обробка та успішність</div>
-            <div class="kpi-grid">
+            <div class="kpi-grid kpi-grid-3">
               ${metricCard('Оброблено лідів', fmtNumber(cm.leadsProcessed), trendHtml(cm.leadsProcessed, pm.leadsProcessed, true), 'span 4')}
               ${metricCard('Успішних лідів', fmtNumber(cm.leadsSuccess), trendHtml(cm.leadsSuccess, pm.leadsSuccess, true), 'span 4')}
               ${metricCard('Товарів в успішних', fmtNumber(cm.leadsSuccessItems), trendHtml(cm.leadsSuccessItems, pm.leadsSuccessItems, true), 'span 4')}
             </div>
           </div>
-          <div class="kpi-grid">
+          <div class="kpi-grid kpi-grid-3">
             ${metricCard('Чуйка у лідах (шт/сума)', `${fmtNumber(cm.leadsChuykaItems)} / ${fmtMoney(cm.leadsChuykaAmount)}`, trendHtml(cm.leadsChuykaAmount, pm.leadsChuykaAmount, true), 'span 4')}
             ${metricCard('Сума успішних лідів', fmtMoney(cm.leadsSuccessAmount), trendHtml(cm.leadsSuccessAmount, pm.leadsSuccessAmount, true), 'span 4')}
             ${metricCard('Чуйка в успішних (шт/сума)', `${fmtNumber(cm.leadsSuccessChuykaItems)} / ${fmtMoney(cm.leadsSuccessChuykaAmount)}`, trendHtml(cm.leadsSuccessChuykaAmount, pm.leadsSuccessChuykaAmount, true), 'span 4')}
@@ -1077,15 +1203,15 @@
 
         <div class="panel-card p-3">
           <div class="section-title">Замовлення</div>
-          <div class="kpi-grid">
-            ${metricCard('Створено замовлень', fmtNumber(cm.ordersCreated), trendHtml(cm.ordersCreated, pm.ordersCreated, true), 'span 3')}
-            ${metricCard('Товарів у замовленнях', fmtNumber(cm.ordersItems), trendHtml(cm.ordersItems, pm.ordersItems, true), 'span 3')}
-            ${metricCard('Сума товарів', fmtMoney(cm.ordersAmount), trendHtml(cm.ordersAmount, pm.ordersAmount, true), 'span 3')}
-            ${metricCard('Чуйка (шт / сума)', `${fmtNumber(cm.ordersChuykaItems)} / ${fmtMoney(cm.ordersChuykaAmount)}`, trendHtml(cm.ordersChuykaAmount, pm.ordersChuykaAmount, true), 'span 3')}
+          <div class="kpi-grid kpi-grid-3">
+            ${metricCard('Створено замовлень', fmtNumber(cm.ordersCreated), trendHtml(cm.ordersCreated, pm.ordersCreated, true), 'span 4')}
+            ${metricCard('Товарів у замовленнях', fmtNumber(cm.ordersItems), trendHtml(cm.ordersItems, pm.ordersItems, true), 'span 4')}
+            ${metricCard('Сума товарів', fmtMoney(cm.ordersAmount), trendHtml(cm.ordersAmount, pm.ordersAmount, true), 'span 4')}
+            ${metricCard('Чуйка (шт / сума)', `${fmtNumber(cm.ordersChuykaItems)} / ${fmtMoney(cm.ordersChuykaAmount)}`, trendHtml(cm.ordersChuykaAmount, pm.ordersChuykaAmount, true), 'span 4')}
           </div>
           <div class="metric-band mb-0">
             <div class="metric-band-title">Завершені</div>
-            <div class="kpi-grid">
+            <div class="kpi-grid kpi-grid-3">
               ${metricCard('Успішно завершені', fmtNumber(cm.ordersCompleted), trendHtml(cm.ordersCompleted, pm.ordersCompleted, true), 'span 4')}
               ${metricCard('Товарів у завершених', fmtNumber(cm.ordersCompletedItems), trendHtml(cm.ordersCompletedItems, pm.ordersCompletedItems, true), 'span 4')}
               ${metricCard('Оплати у завершених', fmtMoney(cm.ordersCompletedPaid), trendHtml(cm.ordersCompletedPaid, pm.ordersCompletedPaid, true), 'span 4')}
@@ -1101,15 +1227,21 @@
           ${buildPlanChartHtml(model.series)}
         </details>
 
-        <div class="panel-card p-3">
-          <div class="section-title">По джерелах</div>
+        <details class="panel-card p-3" open>
+          <summary class="d-flex justify-content-between align-items-center mb-2">
+            <div class="section-title mb-0">По джерелах</div>
+            <span class="muted-note"><i class="bi bi-chevron-down"></i></span>
+          </summary>
           ${buildSourcesTableHtml(model.sourcesRows)}
-        </div>
+        </details>
 
-        <div class="panel-card p-3">
-          <div class="section-title">Статистика по днях</div>
+        <details class="panel-card p-3" open>
+          <summary class="d-flex justify-content-between align-items-center mb-2">
+            <div class="section-title mb-0">Статистика по днях</div>
+            <span class="muted-note"><i class="bi bi-chevron-down"></i></span>
+          </summary>
           ${buildDailyTableHtml(model.dailyRows)}
-        </div>
+        </details>
 
         ${state.access.role === 'Керівник' ? `
           <div class="panel-card p-3">
@@ -1149,7 +1281,7 @@
       const cls = diff === 0 ? 'neutral' : (good ? 'good' : 'bad');
       const sign = diff > 0 ? '+' : (diff < 0 ? '-' : '');
 
-      return `<div class="trend ${cls}">${sign}${pct.toFixed(1)}% до попер. періоду</div>`;
+      return `<div class="trend ${cls}">${sign}${pct.toFixed(1)}%</div>`;
     }
 
     function buildPlanChartHtml(series) {
@@ -1162,8 +1294,8 @@
     function renderCumulativeChart(series) {
       const points = series.points;
       const width = 980;
-      const height = 260;
-      const pad = { top: 24, right: 24, bottom: 34, left: 46 };
+      const height = 320;
+      const pad = { top: 20, right: 14, bottom: 36, left: 10 };
       const max = Math.max(series.max, 1);
 
       const x = (i) => {
@@ -1174,6 +1306,35 @@
       const y = (v) => pad.top + (1 - v / max) * (height - pad.top - pad.bottom);
 
       const line = (key) => points.map((p, i) => `${x(i)},${y(num(p[key]))}`).join(' ');
+      const dots = points.map((p, i) => {
+        const cx = x(i);
+        const py = y(num(p.plan));
+        const fy = y(num(p.fact));
+        const title = `${p.label} | План: ${fmtMoney(num(p.plan))} | Факт: ${fmtMoney(num(p.fact))}`;
+        return `
+          <circle class="chart-dot-plan" cx="${cx}" cy="${py}" r="${points.length === 1 ? 5 : 3}">
+            <title>${escapeHtml(title)}</title>
+          </circle>
+          <circle class="chart-dot-fact" cx="${cx}" cy="${fy}" r="${points.length === 1 ? 5 : 3}">
+            <title>${escapeHtml(title)}</title>
+          </circle>
+        `;
+      }).join('');
+      const valueStep = points.length <= 10 ? 1 : Math.max(2, Math.floor(points.length / 8));
+      const valueLabels = points.map((p, i) => {
+        if (i % valueStep !== 0 && i !== points.length - 1) return '';
+        const cx = x(i);
+        const py = y(num(p.plan));
+        const fy = y(num(p.fact));
+        return `
+          <text x="${cx + 6}" y="${py - 8}" font-size="10" fill="#1458d7" font-weight="700" stroke="#fff" stroke-width="2" paint-order="stroke">
+            ${fmtMoney(num(p.plan))}
+          </text>
+          <text x="${cx + 6}" y="${fy + 12}" font-size="10" fill="#128a4a" font-weight="700" stroke="#fff" stroke-width="2" paint-order="stroke">
+            ${fmtMoney(num(p.fact))}
+          </text>
+        `;
+      }).join('');
 
       const factArea = points.map((p, i) => `${x(i)},${y(num(p.fact))}`).join(' ')
         + ` ${x(points.length - 1)},${height - pad.bottom} ${x(0)},${height - pad.bottom}`;
@@ -1182,10 +1343,8 @@
       const grid = [];
       for (let i = 0; i <= ticks; i++) {
         const ratio = i / ticks;
-        const val = max * (1 - ratio);
         const yy = pad.top + ratio * (height - pad.top - pad.bottom);
         grid.push(`<line x1="${pad.left}" y1="${yy}" x2="${width - pad.right}" y2="${yy}" stroke="#d7e3f1" stroke-dasharray="4 5"/>`);
-        grid.push(`<text x="${pad.left - 8}" y="${yy + 4}" text-anchor="end" font-size="11" fill="#5e738a">${fmtMoneyShort(val)}</text>`);
       }
 
       const labelsStep = Math.max(1, Math.floor(points.length / 8));
@@ -1196,11 +1355,17 @@
 
       return `
         <div class="chart-wrap">
-          <svg viewBox="0 0 ${width} ${height}" width="100%" height="260" aria-label="План vs факт">
+          <svg viewBox="0 0 ${width} ${height}" width="100%" height="320" aria-label="План vs факт">
             ${grid.join('')}
             <polygon points="${factArea}" fill="rgba(18,138,74,.13)"></polygon>
-            <polyline points="${line('plan')}" fill="none" stroke="#1458d7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
-            <polyline points="${line('fact')}" fill="none" stroke="#128a4a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            <polyline points="${line('plan')}" fill="none" stroke="#1458d7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <title>План: ${fmtMoney(series.planTotal)}</title>
+            </polyline>
+            <polyline points="${line('fact')}" fill="none" stroke="#128a4a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <title>Факт: ${fmtMoney(series.factTotal)}</title>
+            </polyline>
+            ${dots}
+            ${valueLabels}
             ${labels}
           </svg>
           <div class="chart-legend">
@@ -1208,12 +1373,35 @@
             <span><i class="legend-dot" style="background:#128a4a"></i>Факт</span>
             <span class="ms-auto">План: <strong>${fmtMoney(series.planTotal)}</strong> · Факт: <strong>${fmtMoney(series.factTotal)}</strong></span>
           </div>
+          <div class="chart-stats">
+            <div class="chart-stat" title="Накопичувальний план за період">
+              <div class="chart-stat-label">План</div>
+              <div class="chart-stat-value">${fmtMoney(series.planTotal)}</div>
+            </div>
+            <div class="chart-stat" title="Накопичувальний факт за період">
+              <div class="chart-stat-label">Факт</div>
+              <div class="chart-stat-value">${fmtMoney(series.factTotal)}</div>
+            </div>
+            <div class="chart-stat" title="Виконання плану">
+              <div class="chart-stat-label">Виконання</div>
+              <div class="chart-stat-value">${fmtPercent(series.planTotal > 0 ? (series.factTotal / series.planTotal) : 0)}</div>
+            </div>
+          </div>
         </div>
       `;
     }
 
     function buildSourcesTableHtml(rows) {
-      if (!rows || !rows.length) return '<div class="muted-note">Немає даних.</div>';
+      const filtered = (rows || []).filter((r) => {
+        const m = r.metrics || {};
+        const sum = num(m.leadsCreated) + num(m.leadsItems) + num(m.leadsAmount) +
+          num(m.leadsChuykaItems) + num(m.leadsChuykaAmount) + num(m.ordersCreated) +
+          num(m.ordersItems) + num(m.ordersAmount) + num(m.ordersChuykaItems) +
+          num(m.ordersChuykaAmount) + num(m.ordersCompleted) + num(m.ordersCompletedItems) +
+          num(m.ordersCompletedPaid);
+        return sum > 0;
+      });
+      if (!filtered.length) return '<div class="muted-note">Немає даних.</div>';
 
       return `
         <div class="table-wrap">
@@ -1235,7 +1423,7 @@
               </tr>
             </thead>
             <tbody>
-              ${rows.map((r) => {
+              ${filtered.map((r) => {
                 const m = r.metrics;
                 return `
                   <tr>
@@ -1261,7 +1449,15 @@
     }
 
     function buildDailyTableHtml(rows) {
-      if (!rows || !rows.length) return '<div class="muted-note">Немає даних.</div>';
+      const filtered = (rows || []).filter((row) => {
+        const m = row.metrics || {};
+        const sum = num(m.leadsCreated) + num(m.leadsItems) + num(m.leadsAmount) +
+          num(m.leadsProcessed) + num(m.leadsSuccess) + num(m.leadsSuccessItems) +
+          num(m.leadsSuccessAmount) + num(m.ordersCreated) + num(m.ordersItems) +
+          num(m.ordersAmount) + num(m.ordersCompleted) + num(m.ordersCompletedPaid);
+        return sum > 0;
+      });
+      if (!filtered.length) return '<div class="muted-note">Немає даних.</div>';
 
       return `
         <div class="table-wrap">
@@ -1284,7 +1480,7 @@
               </tr>
             </thead>
             <tbody>
-              ${rows.map((row) => {
+              ${filtered.map((row) => {
                 const m = row.metrics;
                 return `
                   <tr>
