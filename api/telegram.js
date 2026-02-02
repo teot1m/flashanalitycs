@@ -120,7 +120,7 @@ async function handleRegistration(chatId, userId, rawData, botToken, apiUrl) {
 
   const res = await apiGet(apiUrl, { action: 'register', userId: String(userId), manager: manager });
   if (res && res.ok) {
-    await sendMessage(botToken, chatId, 'Ваш запит на розглядi. Очікуйте підтвердження.', { remove_keyboard: true });
+    await sendMessage(botToken, chatId, 'Заявка в обробці. Очікуйте підтвердження.', { remove_keyboard: true });
     return;
   }
 
