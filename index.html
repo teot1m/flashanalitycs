@@ -1080,7 +1080,17 @@
       if (r.managerRows && r.managerRows.length) {
         lines.push('');
         lines.push('*' + escapeMdV2('🧑‍💼 По менеджерах') + '*');
-        r.managerRows.forEach((row) => {
+        const filtered = r.managerRows.filter((row) => {
+          const m = row.metrics || {};
+          const sum = num(m.leadsCreated) + num(m.leadsSuccess) +
+            num(m.ordersCreated) + num(m.ordersItems) + num(m.ordersAmount) +
+            num(m.ordersCompleted) + num(m.ordersCompletedItems) + num(m.ordersCompletedPaid) +
+            num(m.ordersCompletedChuykaItems) + num(m.ordersCompletedChuykaAmount) +
+            num(m.planSales) + num(m.factSales);
+          return sum > 0;
+        }).sort((a, b) => num(b.metrics.ordersCreated) - num(a.metrics.ordersCreated));
+
+        filtered.forEach((row) => {
           const m = row.metrics || {};
           const name = row.manager || '';
           const plan = fmtMoney(m.planSales);
