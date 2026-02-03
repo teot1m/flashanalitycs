@@ -22,7 +22,9 @@ export default async function handler(req, res) {
     const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
     const payload = {
       chat_id: userId,
-      text: text
+      text: text,
+      parse_mode: 'MarkdownV2',
+      disable_web_page_preview: true
     };
     await fetch(url, {
       method: 'POST',

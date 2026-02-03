@@ -1035,47 +1035,67 @@
       initPlanChartDayInfo();
     }
 
+    function escapeMdV2(text) {
+      return String(text).replace(/([_*\[\]()~`>#+\-=|{}.!\\])/g, '\\$1');
+    }
+
     function buildTelegramReportText() {
       if (!state.lastReport) return '';
       const r = state.lastReport;
       const cm = r.currentMetrics || {};
-      const period = r.currentLabel || '';
-      const source = state.filters.source || 'усього';
-      const manager = state.filters.manager || 'усього';
+      const period = escapeMdV2(r.currentLabel || '');
+      const source = escapeMdV2(state.filters.source || 'усього');
+      const manager = escapeMdV2(state.filters.manager || 'усього');
 
       const lines = [];
-      lines.push('Звiт за перiод: ' + period);
-      lines.push('Фiльтри: Джерело = ' + source + ', Менеджер = ' + manager);
+      lines.push('*Звiт за перiод:* ' + period);
+      lines.push('*Фiльтри:* Джерело = ' + source + ', Менеджер = ' + manager);
       lines.push('');
-      lines.push('Основнi показники');
-      lines.push('Всього користувачiв: ' + fmtNumber(cm.visitorsTotal));
-      lines.push('Новi користувачi: ' + fmtNumber(cm.visitorsNew));
-      lines.push('Повернувшiся: ' + fmtNumber(cm.visitorsReturning));
-      lines.push('Середнiй чек: ' + fmtMoney(cm.avgCheck));
-      lines.push('План продажiв: ' + fmtMoney(cm.planSales));
-      lines.push('Факт продажiв: ' + fmtMoney(cm.factSales));
-      lines.push('Виконання плану: ' + fmtPercent(cm.planPercent));
+      lines.push('*Основнi показники*');
+      lines.push('• Всього користувачiв: ' + escapeMdV2(fmtNumber(cm.visitorsTotal)));
+      lines.push('• Новi користувачi: ' + escapeMdV2(fmtNumber(cm.visitorsNew)));
+      lines.push('• Повернувшiся: ' + escapeMdV2(fmtNumber(cm.visitorsReturning)));
+      lines.push('• Середнiй чек: ' + escapeMdV2(fmtMoney(cm.avgCheck)));
+      lines.push('• План продажiв: ' + escapeMdV2(fmtMoney(cm.planSales)));
+      lines.push('• Факт продажiв: ' + escapeMdV2(fmtMoney(cm.factSales)));
+      lines.push('• Виконання плану: ' + escapeMdV2(fmtPercent(cm.planPercent)));
       lines.push('');
-      lines.push('Лiди');
-      lines.push('Створено лiдiв: ' + fmtNumber(cm.leadsCreated));
-      lines.push('Товарiв у лiдах: ' + fmtNumber(cm.leadsItems));
-      lines.push('Сума товарiв у лiдах: ' + fmtMoney(cm.leadsAmount));
-      lines.push('Оброблено лiдiв: ' + fmtNumber(cm.leadsProcessed));
-      lines.push('Успiшних лiдiв: ' + fmtNumber(cm.leadsSuccess));
-      lines.push('Товарiв в успiшних: ' + fmtNumber(cm.leadsSuccessItems));
-      lines.push('Сума успiшних лiдiв: ' + fmtMoney(cm.leadsSuccessAmount));
-      lines.push('Чуйка у лiдах (шт/сума): ' + fmtNumber(cm.leadsChuykaItems) + ' / ' + fmtMoney(cm.leadsChuykaAmount));
-      lines.push('Чуйка в успiшних (шт/сума): ' + fmtNumber(cm.leadsSuccessChuykaItems) + ' / ' + fmtMoney(cm.leadsSuccessChuykaAmount));
+      lines.push('*Лiди*');
+      lines.push('• Створено лiдiв: ' + escapeMdV2(fmtNumber(cm.leadsCreated)));
+      lines.push('• Товарiв у лiдах: ' + escapeMdV2(fmtNumber(cm.leadsItems)));
+      lines.push('• Сума товарiв у лiдах: ' + escapeMdV2(fmtMoney(cm.leadsAmount)));
+      lines.push('• Оброблено лiдiв: ' + escapeMdV2(fmtNumber(cm.leadsProcessed)));
+      lines.push('• Успiшних лiдiв: ' + escapeMdV2(fmtNumber(cm.leadsSuccess)));
+      lines.push('• Товарiв в успiшних: ' + escapeMdV2(fmtNumber(cm.leadsSuccessItems)));
+      lines.push('• Сума успiшних лiдiв: ' + escapeMdV2(fmtMoney(cm.leadsSuccessAmount)));
+      lines.push('• Чуйка у лiдах (шт/сума): ' + escapeMdV2(fmtNumber(cm.leadsChuykaItems) + ' / ' + fmtMoney(cm.leadsChuykaAmount)));
+      lines.push('• Чуйка в успiшних (шт/сума): ' + escapeMdV2(fmtNumber(cm.leadsSuccessChuykaItems) + ' / ' + fmtMoney(cm.leadsSuccessChuykaAmount)));
       lines.push('');
-      lines.push('Замовлення');
-      lines.push('Створено замовлень: ' + fmtNumber(cm.ordersCreated));
-      lines.push('Товарiв у замовленнях: ' + fmtNumber(cm.ordersCreatedItems));
-      lines.push('Сума товарiв: ' + fmtMoney(cm.ordersCreatedAmount));
-      lines.push('Чуйка (шт/сума): ' + fmtNumber(cm.ordersCreatedChuykaItems) + ' / ' + fmtMoney(cm.ordersCreatedChuykaAmount));
-      lines.push('Успiшно завершенi: ' + fmtNumber(cm.ordersCompleted));
-      lines.push('Товарiв у завершених: ' + fmtNumber(cm.ordersCompletedItems));
-      lines.push('Оплати у завершених: ' + fmtMoney(cm.ordersCompletedPaid));
-      return lines.join('\\n');
+      lines.push('*Замовлення*');
+      lines.push('• Створено замовлень: ' + escapeMdV2(fmtNumber(cm.ordersCreated)));
+      lines.push('• Товарiв у замовленнях: ' + escapeMdV2(fmtNumber(cm.ordersCreatedItems)));
+      lines.push('• Сума товарiв: ' + escapeMdV2(fmtMoney(cm.ordersCreatedAmount)));
+      lines.push('• Чуйка (шт/сума): ' + escapeMdV2(fmtNumber(cm.ordersCreatedChuykaItems) + ' / ' + fmtMoney(cm.ordersCreatedChuykaAmount)));
+      lines.push('• Успiшно завершенi: ' + escapeMdV2(fmtNumber(cm.ordersCompleted)));
+      lines.push('• Товарiв у завершених: ' + escapeMdV2(fmtNumber(cm.ordersCompletedItems)));
+      lines.push('• Оплати у завершених: ' + escapeMdV2(fmtMoney(cm.ordersCompletedPaid)));
+
+      if (r.managerRows && r.managerRows.length) {
+        lines.push('');
+        lines.push('*По менеджерах*');
+        r.managerRows.forEach((row) => {
+          const m = row.metrics || {};
+          const name = escapeMdV2(row.manager || '');
+          const plan = escapeMdV2(fmtMoney(m.planSales));
+          const fact = escapeMdV2(fmtMoney(m.factSales));
+          const pct = escapeMdV2(fmtPercent(m.planPercent));
+          const orders = escapeMdV2(fmtNumber(m.ordersCreated));
+          const paid = escapeMdV2(fmtMoney(m.ordersCompletedPaid));
+          lines.push('• ' + name + ': план ' + plan + ', факт ' + fact + ', ' + pct + ', замовл. ' + orders + ', оплати ' + paid);
+        });
+      }
+
+      return lines.join('\n');
     }
 
     async function sendTelegramReport() {
