@@ -1087,13 +1087,24 @@
           const fact = fmtMoney(m.factSales);
           const pct = fmtPercent(m.planPercent);
           const orders = fmtNumber(m.ordersCreated);
-          const paid = fmtMoney(m.ordersCompletedPaid);
+          const ordersItems = fmtNumber(m.ordersItems);
+          const ordersAmount = fmtMoney(m.ordersAmount);
+          const completed = fmtNumber(m.ordersCompleted);
+          const completedItems = fmtNumber(m.ordersCompletedItems);
+          const completedPaid = fmtMoney(m.ordersCompletedPaid);
+          const chuykaItems = fmtNumber(m.ordersCompletedChuykaItems);
+          const chuykaAmount = fmtMoney(m.ordersCompletedChuykaAmount);
+          const leadsCreated = fmtNumber(m.leadsCreated);
+          const leadsSuccess = fmtNumber(m.leadsSuccess);
           lines.push('*' + escapeMdV2(name) + '*');
+          lines.push('  • ' + escapeMdV2('Лiди створенi: ' + leadsCreated));
+          lines.push('  • ' + escapeMdV2('Успiшнi лiди: ' + leadsSuccess));
+          lines.push('  • ' + escapeMdV2('Замовлення створенi: ' + orders + ' / ' + ordersItems + ' / ' + ordersAmount));
+          lines.push('  • ' + escapeMdV2('Замовлення успiшнi: ' + completed + ' / ' + completedItems + ' / ' + completedPaid));
+          lines.push('  • ' + escapeMdV2('Чуйки в успiшних: ' + chuykaItems + ' / ' + chuykaAmount));
           lines.push('  • ' + escapeMdV2('План: ' + plan));
           lines.push('  • ' + escapeMdV2('Факт: ' + fact));
           lines.push('  • ' + escapeMdV2('Виконання: ' + pct));
-          lines.push('  • ' + escapeMdV2('Замовлень: ' + orders));
-          lines.push('  • ' + escapeMdV2('Оплати: ' + paid));
         });
       }
 
@@ -1185,6 +1196,8 @@
         ordersCompleted: 0,
         ordersCompletedItems: 0,
         ordersCompletedPaid: 0,
+        ordersCompletedChuykaItems: 0,
+        ordersCompletedChuykaAmount: 0,
 
         avgCheck: 0
       };
@@ -1252,6 +1265,10 @@
         m.ordersCompletedItems += num(row.qty);
         const paid = num(row.paid);
         m.ordersCompletedPaid += paid > 0 ? paid : num(row.amount);
+        if (row.chuyka) {
+          m.ordersCompletedChuykaItems += num(row.qty);
+          m.ordersCompletedChuykaAmount += paid > 0 ? paid : num(row.amount);
+        }
       });
       m.ordersCompleted = completedSet.size;
       m.avgCheck = m.ordersCompleted > 0 ? m.ordersCompletedPaid / m.ordersCompleted : 0;
