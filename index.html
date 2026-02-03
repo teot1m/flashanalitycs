@@ -1074,12 +1074,11 @@
       lines.push('');
       lines.push('*' + escapeMdV2('🛒 Замовлення') + '*');
       lines.push('• ' + escapeMdV2('Створено замовлень: ' + fmtNumber(cm.ordersCreated)));
-      lines.push('• ' + escapeMdV2('Товарiв у замовленнях: ' + fmtNumber(cm.ordersItems)));
-      lines.push('• ' + escapeMdV2('Сума товарiв: ' + fmtMoney(cm.ordersAmount)));
-      lines.push('• ' + escapeMdV2('Чуйка (шт/сума): ' + fmtNumber(cm.ordersChuykaItems) + ' / ' + fmtMoney(cm.ordersChuykaAmount)));
+      lines.push('• ' + escapeMdV2('Замовлення створенi: 🧾' + fmtNumber(cm.ordersCreated) + ' / 📦' + fmtNumber(cm.ordersItems) + ' / 💰' + fmtMoney(cm.ordersAmount)));
+      lines.push('• ' + escapeMdV2('Чуйки у створених: 🔎' + fmtNumber(cm.ordersChuykaItems) + ' / 💰' + fmtMoney(cm.ordersChuykaAmount)));
       lines.push('• ' + escapeMdV2('Успiшно завершенi: ' + fmtNumber(cm.ordersCompleted)));
-      lines.push('• ' + escapeMdV2('Товарiв у завершених: ' + fmtNumber(cm.ordersCompletedItems)));
-      lines.push('• ' + escapeMdV2('Оплати у завершених: ' + fmtMoney(cm.ordersCompletedPaid)));
+      lines.push('• ' + escapeMdV2('Замовлення успiшнi: ✅' + fmtNumber(cm.ordersCompleted) + ' / 📦' + fmtNumber(cm.ordersCompletedItems) + ' / 💰' + fmtMoney(cm.ordersCompletedPaid)));
+      lines.push('• ' + escapeMdV2('Чуйки в успiшних: 🔎' + fmtNumber(cm.ordersCompletedChuykaItems) + ' / 💰' + fmtMoney(cm.ordersCompletedChuykaAmount)));
 
       if (r.managerRows && r.managerRows.length) {
         lines.push('');
@@ -1108,14 +1107,17 @@
           const completedPaid = fmtMoney(m.ordersCompletedPaid);
           const chuykaItems = fmtNumber(m.ordersCompletedChuykaItems);
           const chuykaAmount = fmtMoney(m.ordersCompletedChuykaAmount);
+          const createdChuykaItems = fmtNumber(m.ordersChuykaItems);
+          const createdChuykaAmount = fmtMoney(m.ordersChuykaAmount);
           const leadsCreated = fmtNumber(m.leadsCreated);
           const leadsSuccess = fmtNumber(m.leadsSuccess);
           lines.push('*' + escapeMdV2(name) + '*');
           lines.push('  • ' + escapeMdV2('Лiди створенi: ' + leadsCreated));
           lines.push('  • ' + escapeMdV2('Успiшнi лiди: ' + leadsSuccess));
-          lines.push('  • ' + escapeMdV2('Замовлення створенi: ' + orders + ' / ' + ordersItems + ' / ' + ordersAmount));
-          lines.push('  • ' + escapeMdV2('Замовлення успiшнi: ' + completed + ' / ' + completedItems + ' / ' + completedPaid));
-          lines.push('  • ' + escapeMdV2('Чуйки в успiшних: ' + chuykaItems + ' / ' + chuykaAmount));
+          lines.push('  • ' + escapeMdV2('Замовлення створенi: 🧾' + orders + ' / 📦' + ordersItems + ' / 💰' + ordersAmount));
+          lines.push('  • ' + escapeMdV2('Чуйки у створених: 🔎' + createdChuykaItems + ' / 💰' + createdChuykaAmount));
+          lines.push('  • ' + escapeMdV2('Замовлення успiшнi: ✅' + completed + ' / 📦' + completedItems + ' / 💰' + completedPaid));
+          lines.push('  • ' + escapeMdV2('Чуйки в успiшних: 🔎' + chuykaItems + ' / 💰' + chuykaAmount));
           lines.push('  • ' + escapeMdV2('План: ' + plan));
           lines.push('  • ' + escapeMdV2('Факт: ' + fact));
           lines.push('  • ' + escapeMdV2('Виконання: ' + pct));
