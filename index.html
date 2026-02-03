@@ -334,7 +334,7 @@
     }
 
     .kpi-value {
-      font-size: clamp(18px, 4.8vw, 31px);
+      font-size: clamp(16px, 4.4vw, 30px);
       line-height: 1;
       font-weight: 800;
       color: #162b46;
@@ -342,10 +342,14 @@
       white-space: nowrap;
       overflow-wrap: normal;
       word-break: keep-all;
+      max-width: 100%;
+      display: block;
     }
 
     .kpi-value>* {
       white-space: nowrap;
+      display: inline-block;
+      max-width: 100%;
     }
 
     .kpi-sub {
@@ -620,7 +624,7 @@
       }
 
       .kpi-grid-main .kpi-value {
-        font-size: clamp(16px, 4.6vw, 21px);
+        font-size: clamp(14px, 5vw, 20px);
         margin-bottom: 5px;
       }
 
@@ -638,7 +642,7 @@
       }
 
       .kpi-value {
-        font-size: 27px;
+        font-size: clamp(14px, 6.2vw, 22px);
       }
 
       .kpi-card {
@@ -1051,7 +1055,7 @@
       lines.push('*' + escapeMdV2('Основнi показники') + '*');
       lines.push('• ' + escapeMdV2('Всього користувачiв: ' + fmtNumber(cm.visitorsTotal)));
       lines.push('• ' + escapeMdV2('Новi користувачi: ' + fmtNumber(cm.visitorsNew)));
-      lines.push('• ' + escapeMdV2('Повернувшiся: ' + fmtNumber(cm.visitorsReturning)));
+      lines.push('• ' + escapeMdV2('Повторні користувачi: ' + fmtNumber(cm.visitorsReturning)));
       lines.push('• ' + escapeMdV2('Середнiй чек: ' + fmtMoney(cm.avgCheck)));
       lines.push('• ' + escapeMdV2('План продажiв: ' + fmtMoney(cm.planSales)));
       lines.push('• ' + escapeMdV2('Факт продажiв: ' + fmtMoney(cm.factSales)));
@@ -1407,7 +1411,7 @@
           <div class="kpi-grid kpi-grid-main">
             ${metricCard('Всього користувачів', fmtNumber(cm.visitorsTotal), trendHtml(cm.visitorsTotal, pm.visitorsTotal, true), 'span 3')}
             ${metricCard('Нові користувачі', fmtNumber(cm.visitorsNew), trendHtml(cm.visitorsNew, pm.visitorsNew, true), 'span 3')}
-            ${metricCard('Повернувшіся користувачі', fmtNumber(cm.visitorsReturning), trendHtml(cm.visitorsReturning, pm.visitorsReturning, true), 'span 3')}
+            ${metricCard('Повторні користувачі', fmtNumber(cm.visitorsReturning), trendHtml(cm.visitorsReturning, pm.visitorsReturning, true), 'span 3')}
             ${metricCard('Середній чек', fmtMoney(cm.avgCheck), trendHtml(cm.avgCheck, pm.avgCheck, true), 'span 3')}
 
             ${metricCard('План продажів', `<span title="План: ${fmtMoney(cm.planSales)}">${fmtMoney(cm.planSales)}</span>`, trendHtml(cm.planSales, pm.planSales, true), 'span 4')}
