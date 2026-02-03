@@ -26,11 +26,24 @@ export default async function handler(req, res) {
       parse_mode: 'MarkdownV2',
       disable_web_page_preview: true
     };
-    await fetch(url, {
+    const tgRes = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
+    let tgPayload = null;
+    try {
+      tgPayload = await tgRes.json();
+    } catch (e) {
+      tgPayload = null;
+    }
+    if (!tgPayload || tgPayload.ok !== true) {
+      res.status(200).json({
+        ok: false,
+        error: (tgPayload && tgPayload.description) ? tgPayload.description : 'telegram_error'
+      });
+      return;
+    }
     res.status(200).json({ ok: true });
   } catch (err) {
     res.status(200).json({ ok: false, error: String(err && err.message ? err.message : err) });

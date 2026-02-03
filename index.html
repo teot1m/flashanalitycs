@@ -1122,7 +1122,7 @@
       if (payload && payload.ok) {
         showToast('Звiт вiдправлено в Telegram');
       } else {
-        showToast('Помилка вiдправки звiту');
+        showToast('Помилка вiдправки: ' + (payload && payload.error ? payload.error : 'невідомо'));
       }
     }
 
