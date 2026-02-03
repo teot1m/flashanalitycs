@@ -1044,12 +1044,9 @@
       const r = state.lastReport;
       const cm = r.currentMetrics || {};
       const period = escapeMdV2(r.currentLabel || '');
-      const source = escapeMdV2(state.filters.source || 'усього');
-      const manager = escapeMdV2(state.filters.manager || 'усього');
 
       const lines = [];
-      lines.push('*' + escapeMdV2('Звiт за перiод') + '* ' + period);
-      lines.push('*' + escapeMdV2('Фiльтри') + '* ' + escapeMdV2('Джерело = ' + source + ', Менеджер = ' + manager));
+      lines.push('*' + escapeMdV2('📊 Звiт за перiод') + '* ' + period);
       lines.push('');
       lines.push('*' + escapeMdV2('Основнi показники') + '*');
       lines.push('• ' + escapeMdV2('Всього користувачiв: ' + fmtNumber(cm.visitorsTotal)));
@@ -1060,7 +1057,7 @@
       lines.push('• ' + escapeMdV2('Факт продажiв: ' + fmtMoney(cm.factSales)));
       lines.push('• ' + escapeMdV2('Виконання плану: ' + fmtPercent(cm.planPercent)));
       lines.push('');
-      lines.push('*' + escapeMdV2('Лiди') + '*');
+      lines.push('*' + escapeMdV2('👥 Лiди') + '*');
       lines.push('• ' + escapeMdV2('Створено лiдiв: ' + fmtNumber(cm.leadsCreated)));
       lines.push('• ' + escapeMdV2('Товарiв у лiдах: ' + fmtNumber(cm.leadsItems)));
       lines.push('• ' + escapeMdV2('Сума товарiв у лiдах: ' + fmtMoney(cm.leadsAmount)));
@@ -1071,18 +1068,18 @@
       lines.push('• ' + escapeMdV2('Чуйка у лiдах (шт/сума): ' + fmtNumber(cm.leadsChuykaItems) + ' / ' + fmtMoney(cm.leadsChuykaAmount)));
       lines.push('• ' + escapeMdV2('Чуйка в успiшних (шт/сума): ' + fmtNumber(cm.leadsSuccessChuykaItems) + ' / ' + fmtMoney(cm.leadsSuccessChuykaAmount)));
       lines.push('');
-      lines.push('*' + escapeMdV2('Замовлення') + '*');
+      lines.push('*' + escapeMdV2('🛒 Замовлення') + '*');
       lines.push('• ' + escapeMdV2('Створено замовлень: ' + fmtNumber(cm.ordersCreated)));
-      lines.push('• ' + escapeMdV2('Товарiв у замовленнях: ' + fmtNumber(cm.ordersCreatedItems)));
-      lines.push('• ' + escapeMdV2('Сума товарiв: ' + fmtMoney(cm.ordersCreatedAmount)));
-      lines.push('• ' + escapeMdV2('Чуйка (шт/сума): ' + fmtNumber(cm.ordersCreatedChuykaItems) + ' / ' + fmtMoney(cm.ordersCreatedChuykaAmount)));
+      lines.push('• ' + escapeMdV2('Товарiв у замовленнях: ' + fmtNumber(cm.ordersItems)));
+      lines.push('• ' + escapeMdV2('Сума товарiв: ' + fmtMoney(cm.ordersAmount)));
+      lines.push('• ' + escapeMdV2('Чуйка (шт/сума): ' + fmtNumber(cm.ordersChuykaItems) + ' / ' + fmtMoney(cm.ordersChuykaAmount)));
       lines.push('• ' + escapeMdV2('Успiшно завершенi: ' + fmtNumber(cm.ordersCompleted)));
       lines.push('• ' + escapeMdV2('Товарiв у завершених: ' + fmtNumber(cm.ordersCompletedItems)));
       lines.push('• ' + escapeMdV2('Оплати у завершених: ' + fmtMoney(cm.ordersCompletedPaid)));
 
       if (r.managerRows && r.managerRows.length) {
         lines.push('');
-        lines.push('*' + escapeMdV2('По менеджерах') + '*');
+        lines.push('*' + escapeMdV2('🧑‍💼 По менеджерах') + '*');
         r.managerRows.forEach((row) => {
           const m = row.metrics || {};
           const name = row.manager || '';
@@ -1091,7 +1088,12 @@
           const pct = fmtPercent(m.planPercent);
           const orders = fmtNumber(m.ordersCreated);
           const paid = fmtMoney(m.ordersCompletedPaid);
-          lines.push('• ' + escapeMdV2(name + ': план ' + plan + ', факт ' + fact + ', ' + pct + ', замовл. ' + orders + ', оплати ' + paid));
+          lines.push('*' + escapeMdV2(name) + '*');
+          lines.push('  • ' + escapeMdV2('План: ' + plan));
+          lines.push('  • ' + escapeMdV2('Факт: ' + fact));
+          lines.push('  • ' + escapeMdV2('Виконання: ' + pct));
+          lines.push('  • ' + escapeMdV2('Замовлень: ' + orders));
+          lines.push('  • ' + escapeMdV2('Оплати: ' + paid));
         });
       }
 
