@@ -10,5 +10,6 @@
 !register/index.html
 !api/
 !api/telegram.js
+!api/send-report.js
 !vercel.json
 !env.local

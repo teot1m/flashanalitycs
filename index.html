@@ -688,6 +688,9 @@
       </div>
       <div class="d-flex align-items-center gap-2">
         <span class="role-badge"><i class="bi bi-shield-lock me-1"></i><span id="uiUserRole">...</span></span>
+        <button class="btn btn-sm btn-dark" id="sendTelegramBtn" title="Надіслати у Telegram" style="display:none;">
+          <i class="bi bi-send"></i> <span class="d-none d-md-inline">Відправити в телеграм</span>
+        </button>
         <button class="btn btn-sm btn-light border" id="forceReloadBtn" title="Оновити"><i
             class="bi bi-arrow-clockwise"></i></button>
       </div>
@@ -835,6 +838,7 @@
 
     function bindEvents() {
       document.getElementById('forceReloadBtn').addEventListener('click', () => hardRefresh().catch(handleUiError));
+      document.getElementById('sendTelegramBtn').addEventListener('click', () => sendTelegramReport().catch(handleUiError));
       document.getElementById('applyFiltersBtn').addEventListener('click', () => {
         renderFromCache();
         if (window.innerWidth < 992) toggleFiltersPanel(false);
@@ -910,6 +914,9 @@
       if (res.role !== 'Керівник') {
         document.getElementById('managerField').classList.add('d-none');
         state.filters.manager = res.manager || 'усього';
+        document.getElementById('sendTelegramBtn').style.display = 'none';
+      } else {
+        document.getElementById('sendTelegramBtn').style.display = 'inline-flex';
       }
     }
 
@@ -1004,6 +1011,17 @@
       const managerRows = state.access.role === 'Керівник' ? buildManagerRows(current.start, current.end, planMap) : [];
       state.chartSeries = series;
 
+      state.lastReport = {
+        currentLabel: current.label || '',
+        previousLabel: previous.label || '',
+        currentMetrics,
+        previousMetrics,
+        series,
+        sourcesRows,
+        dailyRows,
+        managerRows
+      };
+
       document.getElementById('appContent').innerHTML = buildDashboardHtml({
         currentLabel: current.label || '',
         previousLabel: previous.label || '',
@@ -1015,6 +1033,77 @@
         managerRows
       });
       initPlanChartDayInfo();
+    }
+
+    function buildTelegramReportText() {
+      if (!state.lastReport) return '';
+      const r = state.lastReport;
+      const cm = r.currentMetrics || {};
+      const period = r.currentLabel || '';
+      const source = state.filters.source || 'усього';
+      const manager = state.filters.manager || 'усього';
+
+      const lines = [];
+      lines.push('Звiт за перiод: ' + period);
+      lines.push('Фiльтри: Джерело = ' + source + ', Менеджер = ' + manager);
+      lines.push('');
+      lines.push('Основнi показники');
+      lines.push('Всього користувачiв: ' + fmtNumber(cm.visitorsTotal));
+      lines.push('Новi користувачi: ' + fmtNumber(cm.visitorsNew));
+      lines.push('Повернувшiся: ' + fmtNumber(cm.visitorsReturning));
+      lines.push('Середнiй чек: ' + fmtMoney(cm.avgCheck));
+      lines.push('План продажiв: ' + fmtMoney(cm.planSales));
+      lines.push('Факт продажiв: ' + fmtMoney(cm.factSales));
+      lines.push('Виконання плану: ' + fmtPct(cm.planPercent));
+      lines.push('');
+      lines.push('Лiди');
+      lines.push('Створено лiдiв: ' + fmtNumber(cm.leadsCreated));
+      lines.push('Товарiв у лiдах: ' + fmtNumber(cm.leadsItems));
+      lines.push('Сума товарiв у лiдах: ' + fmtMoney(cm.leadsAmount));
+      lines.push('Оброблено лiдiв: ' + fmtNumber(cm.leadsProcessed));
+      lines.push('Успiшних лiдiв: ' + fmtNumber(cm.leadsSuccess));
+      lines.push('Товарiв в успiшних: ' + fmtNumber(cm.leadsSuccessItems));
+      lines.push('Сума успiшних лiдiв: ' + fmtMoney(cm.leadsSuccessAmount));
+      lines.push('Чуйка у лiдах (шт/сума): ' + fmtNumber(cm.leadsChuykaItems) + ' / ' + fmtMoney(cm.leadsChuykaAmount));
+      lines.push('Чуйка в успiшних (шт/сума): ' + fmtNumber(cm.leadsSuccessChuykaItems) + ' / ' + fmtMoney(cm.leadsSuccessChuykaAmount));
+      lines.push('');
+      lines.push('Замовлення');
+      lines.push('Створено замовлень: ' + fmtNumber(cm.ordersCreated));
+      lines.push('Товарiв у замовленнях: ' + fmtNumber(cm.ordersCreatedItems));
+      lines.push('Сума товарiв: ' + fmtMoney(cm.ordersCreatedAmount));
+      lines.push('Чуйка (шт/сума): ' + fmtNumber(cm.ordersCreatedChuykaItems) + ' / ' + fmtMoney(cm.ordersCreatedChuykaAmount));
+      lines.push('Успiшно завершенi: ' + fmtNumber(cm.ordersCompleted));
+      lines.push('Товарiв у завершених: ' + fmtNumber(cm.ordersCompletedItems));
+      lines.push('Оплати у завершених: ' + fmtMoney(cm.ordersCompletedPaid));
+      return lines.join('\\n');
+    }
+
+    async function sendTelegramReport() {
+      if (!USER_ID) {
+        showToast('Немає userid у посиланні.');
+        return;
+      }
+      if (!state.access || state.access.role !== 'Керівник') {
+        showToast('Доступно лише для керiвника.');
+        return;
+      }
+      const text = buildTelegramReportText();
+      if (!text) {
+        showToast('Немає даних для звiту.');
+        return;
+      }
+
+      const res = await fetch('/api/send-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: USER_ID, text })
+      });
+      const payload = await res.json();
+      if (payload && payload.ok) {
+        showToast('Звiт вiдправлено в Telegram');
+      } else {
+        showToast('Помилка вiдправки звiту');
+      }
     }
 
     function filterPeriodData(startKey, endKey, fixedSource, fixedManager) {
