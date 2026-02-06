@@ -693,7 +693,10 @@
       <div class="d-flex align-items-center gap-2">
         <span class="role-badge"><i class="bi bi-shield-lock me-1"></i><span id="uiUserRole">...</span></span>
         <button class="btn btn-sm btn-dark" id="sendTelegramBtn" title="Надіслати у Telegram" style="display:none;">
-          <i class="bi bi-send"></i> <span class="d-none d-md-inline">Відправити в телеграм</span>
+          <i class="bi bi-send"></i> <span class="d-none d-md-inline">Відправити звiт</span>
+        </button>
+        <button class="btn btn-sm btn-outline-dark" id="sendTelegramProductsBtn" title="Деталізація по товарах" style="display:none;">
+          <i class="bi bi-list-check"></i> <span class="d-none d-md-inline">Товари по менеджерах</span>
         </button>
         <button class="btn btn-sm btn-light border" id="forceReloadBtn" title="Оновити"><i
             class="bi bi-arrow-clockwise"></i></button>
@@ -854,6 +857,7 @@
     function bindEvents() {
       document.getElementById('forceReloadBtn').addEventListener('click', () => hardRefresh().catch(handleUiError));
       document.getElementById('sendTelegramBtn').addEventListener('click', () => sendTelegramReport().catch(handleUiError));
+      document.getElementById('sendTelegramProductsBtn').addEventListener('click', () => sendTelegramProductsReport().catch(handleUiError));
       document.getElementById('applyFiltersBtn').addEventListener('click', () => {
         renderFromCache();
         if (window.innerWidth < 992) toggleFiltersPanel(false);
@@ -930,8 +934,10 @@
         document.getElementById('managerField').classList.add('d-none');
         state.filters.manager = res.manager || 'усього';
         document.getElementById('sendTelegramBtn').style.display = 'none';
+        document.getElementById('sendTelegramProductsBtn').style.display = 'none';
       } else {
         document.getElementById('sendTelegramBtn').style.display = 'inline-flex';
+        document.getElementById('sendTelegramProductsBtn').style.display = 'inline-flex';
       }
     }
 
@@ -1196,6 +1202,83 @@
         showToast('Звiт вiдправлено в Telegram');
       } else {
         showToast('Помилка вiдправки: ' + (payload && payload.error ? payload.error : 'невідомо'));
+      }
+    }
+
+    function fmtMoneyTg(value) {
+      // same style as UI money, but ensure plain text for Telegram
+      return fmtMoney(value);
+    }
+
+    async function sendTelegramProductsReport() {
+      if (!USER_ID) {
+        showToast('Немає userid у посиланні.');
+        return;
+      }
+      if (!state.access || state.access.role !== 'Керівник') {
+        showToast('Доступно лише для керiвника.');
+        return;
+      }
+
+      const ranges = state.baseData && state.baseData.ranges ? state.baseData.ranges : {};
+      const current = ranges.current || {};
+      if (!current.start || !current.end) {
+        showToast('Немає активного періоду.');
+        return;
+      }
+
+      showToast('Готую деталізацію по товарах…');
+
+      const source = state.filters && state.filters.source ? state.filters.source : 'усього';
+      const res = await apiGet({
+        action: 'getManagerProducts',
+        userId: USER_ID,
+        start: current.start,
+        end: current.end,
+        source: source
+      });
+      if (!res || res.error) {
+        showToast('Помилка: ' + (res && res.error ? res.error : 'невідомо'));
+        return;
+      }
+
+      const lines = [];
+      lines.push('*' + escapeMdV2('🧾 Деталізація по товарах') + '*');
+      lines.push(escapeMdV2('Період: ' + (current.label || (current.start + '…' + current.end))));
+      if (source && source !== 'усього') lines.push(escapeMdV2('Джерело: ' + source));
+      lines.push('');
+
+      const managers = Array.isArray(res.managers) ? res.managers : [];
+      managers.forEach((mgr) => {
+        const name = String(mgr.manager || '').trim();
+        const t = mgr.totals || {};
+        lines.push('*' + escapeMdV2(name) + '*');
+        lines.push('• ' + escapeMdV2('Товарів у створених замовленнях: ') + '🧾' + escapeMdV2(fmtNumber(t.orders)) + ' / 📦' + escapeMdV2(fmtNumber(t.items)) + ' / 💰' + escapeMdV2(fmtMoneyTg(t.amount)) + ' / 💳' + escapeMdV2(fmtMoneyTg(t.paid)));
+
+        const products = Array.isArray(mgr.products) ? mgr.products : [];
+        products.forEach((p) => {
+          const label = String(p.product || '').trim();
+          lines.push('• ' + escapeMdV2(label) + ': ' + '🧾' + escapeMdV2(fmtNumber(p.orders)) + ' / 📦' + escapeMdV2(fmtNumber(p.items)) + ' / 💰' + escapeMdV2(fmtMoneyTg(p.amount)) + ' / 💳' + escapeMdV2(fmtMoneyTg(p.paid)));
+        });
+        lines.push('');
+      });
+
+      const text = lines.join('\n');
+
+      const sendRes = await fetch(TELEGRAM_SEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: USER_ID, text })
+      });
+      const contentType = sendRes.headers && sendRes.headers.get ? String(sendRes.headers.get('content-type') || '') : '';
+      let payload = null;
+      if (contentType.indexOf('application/json') !== -1) {
+        payload = await sendRes.json();
+      }
+      if (payload && payload.ok) {
+        showToast('Деталізацію вiдправлено в Telegram');
+      } else {
+        showToast('Помилка вiдправки');
       }
     }
 
