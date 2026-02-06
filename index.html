@@ -1037,6 +1037,7 @@
           state.chartSeries = cached.report ? cached.report.series : null;
           document.getElementById('appContent').innerHTML = cached.html;
           initPlanChartDayInfo();
+          initManagersProductsDetails();
           return;
         }
       }
@@ -1069,6 +1070,7 @@
       const html = buildDashboardHtml(report);
       document.getElementById('appContent').innerHTML = html;
       initPlanChartDayInfo();
+      initManagersProductsDetails();
 
       if (state.renderCache) {
         if (state.renderCache.size > 12) state.renderCache.clear();
@@ -2013,6 +2015,115 @@
       info.classList.add('hidden');
     }
 
+    function initManagersProductsDetails() {
+      if (!state.access || state.access.role !== 'Керівник') return;
+      const table = document.getElementById('managersTable');
+      if (!table) return;
+
+      const tbody = table.querySelector('tbody');
+      if (!tbody) return;
+
+      // bind once per render
+      tbody.querySelectorAll('tr.mgr-row').forEach((row) => {
+        if (row.dataset.bound === '1') return;
+        row.dataset.bound = '1';
+
+        row.addEventListener('click', async () => {
+          const manager = row.getAttribute('data-manager') || '';
+          const detailsRow = tbody.querySelector(`tr.mgr-details[data-manager="${cssEscape(manager)}"]`);
+          if (!detailsRow) return;
+
+          // toggle if already loaded
+          const isHidden = detailsRow.classList.contains('d-none');
+          detailsRow.classList.toggle('d-none', !isHidden);
+          if (!isHidden) return;
+
+          if (detailsRow.dataset.loaded === '1') return;
+          detailsRow.dataset.loaded = '1';
+
+          detailsRow.querySelector('td').innerHTML = '<div class="small text-muted">Завантаження товарів…</div>';
+
+          try {
+            const ranges = state.baseData && state.baseData.ranges ? state.baseData.ranges : {};
+            const current = ranges.current || {};
+            if (!current.start || !current.end) throw new Error('missing_range');
+
+            const source = state.filters && state.filters.source ? state.filters.source : 'усього';
+            const res = await apiGet({
+              action: 'getManagerProductsDetails',
+              userId: USER_ID,
+              start: current.start,
+              end: current.end,
+              source: source,
+              manager: manager
+            });
+            if (!res || res.error) throw new Error(res && res.error ? res.error : 'load_failed');
+
+            detailsRow.querySelector('td').innerHTML = buildManagerProductsDetailsHtml(res);
+          } catch (e) {
+            detailsRow.dataset.loaded = '0';
+            detailsRow.querySelector('td').innerHTML = '<div class="small text-danger">Помилка: ' + escapeHtml(e.message || String(e)) + '</div>';
+          }
+        });
+      });
+    }
+
+    function buildManagerProductsDetailsHtml(payload) {
+      const created = Array.isArray(payload.created) ? payload.created : [];
+      const completed = Array.isArray(payload.completed) ? payload.completed : [];
+
+      const renderList = (rows) => {
+        if (!rows.length) return '<div class="muted-note">Немає даних.</div>';
+        return `
+          <div class="table-wrap" style="margin:0;">
+            <table class="table table-sm mb-0">
+              <thead>
+                <tr>
+                  <th>Товар</th>
+                  <th>🧾</th>
+                  <th>📦</th>
+                  <th>💰</th>
+                  <th>💳</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows.map((p) => {
+                  const star = p.chuyka ? '⭐ ' : '';
+                  return `
+                    <tr>
+                      <td>${escapeHtml(star + String(p.product || ''))}</td>
+                      <td>${fmtNumber(p.orders)}</td>
+                      <td>${fmtNumber(p.items)}</td>
+                      <td>${fmtMoney(p.amount)}</td>
+                      <td>${fmtMoney(p.paid)}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      };
+
+      return `
+        <div class="row g-3">
+          <div class="col-12 col-lg-6">
+            <div class="fw-bold mb-1">Створені за період</div>
+            ${renderList(created)}
+          </div>
+          <div class="col-12 col-lg-6">
+            <div class="fw-bold mb-1">Завершені за період</div>
+            ${renderList(completed)}
+          </div>
+        </div>
+      `;
+    }
+
+    function cssEscape(value) {
+      // minimal escape for attribute selector usage
+      return String(value || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    }
+
     function buildSourcesTableHtml(rows) {
       const filtered = (rows || []).filter((r) => {
         const m = r.metrics || {};
@@ -2133,7 +2244,7 @@
 
       return `
         <div class="table-wrap">
-          <table class="table table-sm align-middle">
+          <table class="table table-sm align-middle" id="managersTable">
             <thead>
               <tr>
                 <th class="sticky-first">Менеджер</th>
@@ -2153,9 +2264,11 @@
             <tbody>
               ${rows.map((r) => {
         const m = r.metrics;
+        const mgr = String(r.manager || '');
+        const mgrEsc = escapeHtml(mgr);
         return `
-                  <tr>
-                    <td class="sticky-first fw-bold">${escapeHtml(r.manager)}</td>
+                  <tr class="mgr-row" data-manager="${mgrEsc}" style="cursor:pointer;">
+                    <td class="sticky-first fw-bold">${mgrEsc} <span class="text-muted" style="font-weight:600;">(товари)</span></td>
                     <td>${fmtNumber(m.leadsCreated)}</td>
                     <td>${fmtNumber(m.leadsProcessed)}</td>
                     <td>${fmtNumber(m.leadsSuccess)}</td>
@@ -2167,6 +2280,11 @@
                     <td>${fmtNumber(m.ordersCompleted)}</td>
                     <td>${fmtMoney(m.ordersCompletedPaid)}</td>
                     <td>${fmtMoney(m.avgCheck)}</td>
+                  </tr>
+                  <tr class="mgr-details d-none" data-manager="${mgrEsc}">
+                    <td colspan="12" class="p-2">
+                      <div class="small text-muted">Натисни на менеджера, щоб завантажити товари…</div>
+                    </td>
                   </tr>
                 `;
       }).join('')}
