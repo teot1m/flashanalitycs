@@ -101,6 +101,8 @@
       justify-content: space-between;
       flex-wrap: wrap;
       margin-bottom: 12px;
+      position: relative;
+      z-index: 2000;
     }
 
     .role-badge {
@@ -1256,7 +1258,7 @@
         const t = mgr.totals || {};
         const lines = [];
         lines.push('*' + escapeMdV2(name) + '*');
-        lines.push(escapeMdV2('Всього: ') + '🧾' + escapeMdV2(fmtNumber(t.orders)) + ' | 📦' + escapeMdV2(fmtNumber(t.items)) + ' | 💰' + escapeMdV2(fmtMoneyTg(t.amount)) + ' | 💳' + escapeMdV2(fmtMoneyTg(t.paid)));
+        lines.push(escapeMdV2('Всього: ') + '🧾' + escapeMdV2(fmtNumber(t.orders)) + ' / 📦' + escapeMdV2(fmtNumber(t.items)) + ' / 💰' + escapeMdV2(fmtMoneyTg(t.amount)) + ' / 💳' + escapeMdV2(fmtMoneyTg(t.paid)));
 
         const products = Array.isArray(mgr.products) ? mgr.products : [];
         let idx = 1;
@@ -1264,7 +1266,7 @@
           const label = String(p.product || '').trim();
           const prefix = (p.chuyka ? '⭐ ' : '') + String(idx) + ') ';
           lines.push(prefix + escapeMdV2(label));
-          lines.push('   ' + '🧾' + escapeMdV2(fmtNumber(p.orders)) + ' | 📦' + escapeMdV2(fmtNumber(p.items)) + ' | 💰' + escapeMdV2(fmtMoneyTg(p.amount)) + ' | 💳' + escapeMdV2(fmtMoneyTg(p.paid)));
+          lines.push('   ' + '🧾' + escapeMdV2(fmtNumber(p.orders)) + ' / 📦' + escapeMdV2(fmtNumber(p.items)) + ' / 💰' + escapeMdV2(fmtMoneyTg(p.amount)) + ' / 💳' + escapeMdV2(fmtMoneyTg(p.paid)));
           idx += 1;
         });
 
