@@ -816,7 +816,9 @@
         tempEnd: ''
       },
       chartSeries: null,
-      debugLines: []
+      debugLines: [],
+      renderCache: new Map(),
+      renderCacheKey: ''
     };
 
     let toastInstance;
@@ -955,16 +957,28 @@
 
       state.baseData = res;
       state.dataKey = key;
+      if (state.renderCache) state.renderCache.clear();
 
       hydrateFiltersFromData();
       pushDebug('Data loaded for ' + key + ', rows: ' + totalRowsCount(res));
       showDebugIfNeeded();
     }
 
+    const scheduleRender = (() => {
+      let t = null;
+      return () => {
+        if (t) clearTimeout(t);
+        t = setTimeout(() => {
+          t = null;
+          renderFromCache();
+        }, 120);
+      };
+    })();
+
     function onFilterChanged() {
       state.filters.source = document.getElementById('sourceFilter').value || 'усього';
       state.filters.manager = document.getElementById('managerFilter').value || 'усього';
-      renderFromCache();
+      scheduleRender();
     }
 
     function toggleFiltersPanel(expand) {
@@ -1008,6 +1022,18 @@
       const current = ranges.current || {};
       const previous = ranges.previous || {};
 
+      const cacheKey = `${state.dataKey}|${state.filters.source}|${state.filters.manager}|${state.access.role}`;
+      if (state.renderCache && state.renderCache.has(cacheKey)) {
+        const cached = state.renderCache.get(cacheKey);
+        if (cached && cached.html) {
+          state.lastReport = cached.report;
+          state.chartSeries = cached.report ? cached.report.series : null;
+          document.getElementById('appContent').innerHTML = cached.html;
+          initPlanChartDayInfo();
+          return;
+        }
+      }
+
       const currentData = filterPeriodData(current.start, current.end);
       const previousData = filterPeriodData(previous.start, previous.end);
 
@@ -1024,7 +1050,7 @@
       const managerRows = state.access.role === 'Керівник' ? buildManagerRows(current.start, current.end, planMap) : [];
       state.chartSeries = series;
 
-      state.lastReport = {
+      const report = {
         currentLabel: current.label || '',
         previousLabel: previous.label || '',
         currentMetrics,
@@ -1034,18 +1060,16 @@
         dailyRows,
         managerRows
       };
+      state.lastReport = report;
 
-      document.getElementById('appContent').innerHTML = buildDashboardHtml({
-        currentLabel: current.label || '',
-        previousLabel: previous.label || '',
-        currentMetrics,
-        previousMetrics,
-        series,
-        sourcesRows,
-        dailyRows,
-        managerRows
-      });
+      const html = buildDashboardHtml(report);
+      document.getElementById('appContent').innerHTML = html;
       initPlanChartDayInfo();
+
+      if (state.renderCache) {
+        if (state.renderCache.size > 12) state.renderCache.clear();
+        state.renderCache.set(cacheKey, { html, report });
+      }
     }
 
     function escapeMdV2(text) {
@@ -1691,7 +1715,7 @@
 
       const info = document.getElementById('chartPointInfo');
       if (!info) return;
-      info.innerHTML = `<strong>${point.label}</strong> · План: <strong>${fmtMoney(plan)}</strong> · Факт: <strong>${fmtMoney(fact)}</strong> · <strong>${fmtPercent(pct)}</strong>`;
+      info.innerHTML = `<strong>${escapeHtml(point.label)}</strong> · План: <strong>${fmtMoney(plan)}</strong> · Факт: <strong>${fmtMoney(fact)}</strong> · <strong>${fmtPercent(pct)}</strong>`;
       info.classList.remove('hidden');
     }
 
@@ -2053,8 +2077,28 @@
       const q = new URLSearchParams(params).toString();
       const url = `${API_URL}?${q}`;
       if (DEBUG) pushDebug('GET ' + url);
-      const res = await fetch(url);
-      return await res.json();
+
+      const attempt = async () => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
+        try {
+          const res = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+          if (!res.ok) {
+            throw new Error('http_' + res.status);
+          }
+          return await res.json();
+        } finally {
+          clearTimeout(timeout);
+        }
+      };
+
+      try {
+        return await attempt();
+      } catch (err) {
+        // one fast retry for transient errors
+        if (DEBUG) pushDebug('apiGet retry due to: ' + String(err && err.message ? err.message : err));
+        return await attempt();
+      }
     }
 
     function isRegisterPage() {
@@ -2167,7 +2211,7 @@
     }
 
     function showErrorCard(msg) {
-      document.getElementById('appContent').innerHTML = `<div class="alert alert-danger">${msg}</div>`;
+      document.getElementById('appContent').innerHTML = `<div class="alert alert-danger">${escapeHtml(msg)}</div>`;
     }
 
     function handleUiError(err) {
