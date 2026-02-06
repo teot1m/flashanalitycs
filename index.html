@@ -784,6 +784,15 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzxOb7aq6buRdyVH0W-XICmFbbhbVzrS68RQVLR9Cyg0g89tP2qfh5qhdZ-qwbBMfqf0w/exec";
     const urlParams = new URLSearchParams(window.location.search);
+    const TELEGRAM_SEND_URL = (() => {
+      const fromQuery = urlParams.get('tgApi') || urlParams.get('tgapi') || urlParams.get('telegramApi');
+      if (fromQuery) return String(fromQuery);
+      const host = String(window.location.hostname || '');
+      if (host.endsWith('github.io')) {
+        return 'https://flashanalitycs.vercel.app/api/send-report';
+      }
+      return '/api/send-report';
+    })();
     const USER_ID = urlParams.get('userid') || urlParams.get('userId') || urlParams.get('uid');
     const DEBUG = urlParams.get('debug') === '1';
 
@@ -1142,12 +1151,25 @@
         return;
       }
 
-      const res = await fetch('/api/send-report', {
+      const res = await fetch(TELEGRAM_SEND_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: USER_ID, text })
       });
-      const payload = await res.json();
+      let payload = null;
+      const contentType = res.headers && res.headers.get ? String(res.headers.get('content-type') || '') : '';
+      if (contentType.indexOf('application/json') !== -1) {
+        payload = await res.json();
+      } else {
+        const rawText = await res.text();
+        const statusLabel = res && res.status ? String(res.status) : '';
+        const statusText = res && res.statusText ? String(res.statusText) : '';
+        showToast('Помилка вiдправки: ' + (statusLabel || 'невiдомо') + (statusText ? ' ' + statusText : ''));
+        if (DEBUG) {
+          state.debugLines.push('send-report non-json response: ' + rawText.slice(0, 500));
+        }
+        return;
+      }
       if (payload && payload.ok) {
         showToast('Звiт вiдправлено в Telegram');
       } else {
