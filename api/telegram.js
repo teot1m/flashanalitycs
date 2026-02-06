@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     }
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN || '';
-    const dashboardUrl = (process.env.DASHBOARD_URL || 'https://teot1m.github.io/flashanalitycs/').replace(/\/+$/, '');
+    const dashboardUrl = (process.env.DASHBOARD_URL || 'https://flashanalitycs.vercel.app/').replace(/\/+$/, '');
     const apiUrl = process.env.APPS_SCRIPT_API_URL || '';
 
     if (!botToken || !apiUrl) {
