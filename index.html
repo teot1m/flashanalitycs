@@ -692,10 +692,10 @@
       </div>
       <div class="d-flex align-items-center gap-2">
         <span class="role-badge"><i class="bi bi-shield-lock me-1"></i><span id="uiUserRole">...</span></span>
-        <button class="btn btn-sm btn-dark" id="sendTelegramBtn" title="Надіслати у Telegram" style="display:none;">
+        <button class="btn btn-sm btn-dark" id="sendTelegramBtn" type="button" title="Надіслати у Telegram" style="display:none; position:relative; z-index:20;">
           <i class="bi bi-send"></i> <span class="d-none d-md-inline">Відправити звiт</span>
         </button>
-        <button class="btn btn-sm btn-outline-dark" id="sendTelegramProductsBtn" title="Деталізація по товарах" style="display:none;">
+        <button class="btn btn-sm btn-outline-dark" id="sendTelegramProductsBtn" type="button" title="Деталізація по товарах" style="display:none; position:relative; z-index:20;">
           <i class="bi bi-list-check"></i> <span class="d-none d-md-inline">Товари по менеджерах</span>
         </button>
         <button class="btn btn-sm btn-light border" id="forceReloadBtn" title="Оновити"><i
@@ -1277,12 +1277,35 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: USER_ID, text })
         });
+
+        const status = sendRes && sendRes.status ? sendRes.status : 0;
         const contentType = sendRes.headers && sendRes.headers.get ? String(sendRes.headers.get('content-type') || '') : '';
-        if (contentType.indexOf('application/json') !== -1) {
-          const payload = await sendRes.json();
-          return !!(payload && payload.ok);
+
+        let payload = null;
+        let rawText = '';
+        try {
+          if (contentType.indexOf('application/json') !== -1) {
+            payload = await sendRes.json();
+          } else {
+            rawText = await sendRes.text();
+          }
+        } catch (e) {
+          // ignore parse errors
         }
-        return false;
+
+        const ok = !!(payload && payload.ok);
+        if (!ok) {
+          const err = payload && payload.error ? String(payload.error) : '';
+          const details = [
+            (status ? ('HTTP ' + status) : ''),
+            (err ? ('err=' + err) : ''),
+            (rawText ? ('body=' + rawText.slice(0, 160)) : '')
+          ].filter(Boolean).join(' | ');
+          const msg = 'Помилка вiдправки' + (details ? (': ' + details) : '');
+          showToast(msg);
+          if (DEBUG) pushDebug('sendTelegramText failed: ' + msg);
+        }
+        return ok;
       };
 
       // Telegram limit is 4096 chars; keep margin for MarkdownV2 escaping.
@@ -1296,7 +1319,6 @@
         if (candidate.length > MAX_LEN && chunk.trim().length > 0) {
           const ok = await sendTelegramText(chunk.trim());
           if (!ok) {
-            showToast('Помилка вiдправки');
             return;
           }
           sentAny = true;
@@ -1309,7 +1331,6 @@
       if (chunk.trim().length > 0) {
         const ok = await sendTelegramText(chunk.trim());
         if (!ok) {
-          showToast('Помилка вiдправки');
           return;
         }
         sentAny = true;
