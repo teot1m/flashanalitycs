@@ -945,6 +945,7 @@
 
       const payload = {
         action: 'getStats',
+        mode: 'cube',
         userId: USER_ID,
         range: state.range.preset,
         start: state.range.start,
@@ -1034,15 +1035,12 @@
         }
       }
 
-      const currentData = filterPeriodData(current.start, current.end);
-      const previousData = filterPeriodData(previous.start, previous.end);
-
-      const currentMetrics = computeMetrics(currentData);
-      const previousMetrics = computeMetrics(previousData);
+      const currentMetrics = computeMetricsForRange(current.start, current.end, state.filters.source, state.filters.manager);
+      const previousMetrics = computeMetricsForRange(previous.start, previous.end, state.filters.source, state.filters.manager);
 
       const planMap = state.baseData.plan ? state.baseData.plan.monthly : {};
       const planManagers = resolvePlanManagers();
-      const series = buildPlanFactSeries(currentData.ordersCompleted, current.start, current.end, planMap, planManagers);
+      const series = buildPlanFactSeriesCube(current.start, current.end, planMap, planManagers, state.filters.source, state.filters.manager);
       currentMetrics.planSales = calcPlanTotalForRange(current.start, current.end, planMap, planManagers);
       previousMetrics.planSales = calcPlanTotalForRange(previous.start, previous.end, planMap, planManagers);
       const sourcesRows = buildSourceRows(current.start, current.end);
@@ -1201,7 +1199,125 @@
       }
     }
 
-    function filterPeriodData(startKey, endKey, fixedSource, fixedManager) {
+    function computeMetricsForRange(startKey, endKey, sourceFilter, managerFilter) {
+      // If backend provided an aggregated cube, use it (fast).
+      const cube = state.baseData && state.baseData.cube;
+      if (cube && cube.dates) {
+        const m = {
+          visitorsTotal: 0,
+          visitorsNew: 0,
+          visitorsReturning: 0,
+
+          planSales: 0,
+          factSales: 0,
+          planPercent: 0,
+
+          leadsCreated: 0,
+          leadsItems: 0,
+          leadsAmount: 0,
+          leadsChuykaItems: 0,
+          leadsChuykaAmount: 0,
+
+          leadsProcessed: 0,
+          leadsSuccess: 0,
+          leadsSuccessItems: 0,
+          leadsSuccessAmount: 0,
+          leadsSuccessChuykaItems: 0,
+          leadsSuccessChuykaAmount: 0,
+
+          ordersCreated: 0,
+          ordersItems: 0,
+          ordersAmount: 0,
+          ordersChuykaItems: 0,
+          ordersChuykaAmount: 0,
+
+          ordersCompleted: 0,
+          ordersCompletedItems: 0,
+          ordersCompletedPaid: 0,
+          ordersCompletedChuykaItems: 0,
+          ordersCompletedChuykaAmount: 0,
+
+          avgCheck: 0
+        };
+
+        const src = sourceFilter || 'усього';
+        const mgr = managerFilter || 'усього';
+
+        const start = fromDateKey(startKey);
+        const end = fromDateKey(endKey);
+        if (!start || !end) return m;
+
+        const sumAggInto = (agg) => {
+          if (!agg) return;
+          m.factSales += num(agg.factSales);
+
+          m.leadsCreated += num(agg.leadsCreated);
+          m.leadsItems += num(agg.leadsItems);
+          m.leadsAmount += num(agg.leadsAmount);
+          m.leadsChuykaItems += num(agg.leadsChuykaItems);
+          m.leadsChuykaAmount += num(agg.leadsChuykaAmount);
+
+          m.leadsProcessed += num(agg.leadsProcessed);
+          m.leadsSuccess += num(agg.leadsSuccess);
+          m.leadsSuccessItems += num(agg.leadsSuccessItems);
+          m.leadsSuccessAmount += num(agg.leadsSuccessAmount);
+          m.leadsSuccessChuykaItems += num(agg.leadsSuccessChuykaItems);
+          m.leadsSuccessChuykaAmount += num(agg.leadsSuccessChuykaAmount);
+
+          m.ordersCreated += num(agg.ordersCreated);
+          m.ordersItems += num(agg.ordersItems);
+          m.ordersAmount += num(agg.ordersAmount);
+          m.ordersChuykaItems += num(agg.ordersChuykaItems);
+          m.ordersChuykaAmount += num(agg.ordersChuykaAmount);
+
+          m.ordersCompleted += num(agg.ordersCompleted);
+          m.ordersCompletedItems += num(agg.ordersCompletedItems);
+          m.ordersCompletedPaid += num(agg.ordersCompletedPaid);
+          m.ordersCompletedChuykaItems += num(agg.ordersCompletedChuykaItems);
+          m.ordersCompletedChuykaAmount += num(agg.ordersCompletedChuykaAmount);
+        };
+
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          const dateKey = toDateKey(d);
+          const day = cube.dates[dateKey];
+          if (!day) continue;
+
+          const ga4 = day.ga4 || {};
+          m.visitorsTotal += num(ga4.total);
+          m.visitorsNew += num(ga4.newUsers);
+          m.visitorsReturning += num(ga4.returning);
+
+          const sm = day.sm || {};
+
+          if (src === 'усього' && mgr === 'усього') {
+            Object.keys(sm).forEach((s) => {
+              const byMgr = sm[s] || {};
+              Object.keys(byMgr).forEach((mm) => sumAggInto(byMgr[mm]));
+            });
+          } else if (src !== 'усього' && mgr === 'усього') {
+            const byMgr = sm[src] || {};
+            Object.keys(byMgr).forEach((mm) => sumAggInto(byMgr[mm]));
+          } else if (src === 'усього' && mgr !== 'усього') {
+            Object.keys(sm).forEach((s) => {
+              const byMgr = sm[s] || {};
+              if (byMgr[mgr]) sumAggInto(byMgr[mgr]);
+            });
+          } else {
+            const byMgr = sm[src] || {};
+            if (byMgr[mgr]) sumAggInto(byMgr[mgr]);
+          }
+        }
+
+        m.avgCheck = m.ordersCompleted > 0 ? (m.ordersCompletedPaid / m.ordersCompleted) : 0;
+        return m;
+      }
+
+      // Fallback to legacy raw datasets.
+      const data = filterPeriodDataLegacy(startKey, endKey, sourceFilter, managerFilter);
+      return computeMetrics(data);
+    }
+
+    function filterPeriodDataLegacy(startKey, endKey, fixedSource, fixedManager) {
       const ds = (state.baseData && state.baseData.datasets) || {};
       const sourceFilter = fixedSource || state.filters.source;
       const managerFilter = fixedManager || state.filters.manager;
@@ -1339,6 +1455,7 @@
     }
 
     function buildPlanFactSeries(ordersCompletedRows, startKey, endKey, monthPlanMap, managersFilter) {
+      // legacy
       const start = fromDateKey(startKey);
       const end = fromDateKey(endKey);
       if (!start || !end) return { points: [], max: 0, planTotal: 0, factTotal: 0 };
@@ -1348,6 +1465,14 @@
         if (String(row.statusGroup) !== '5') return;
         factByDate[row.date] = (factByDate[row.date] || 0) + (num(row.paid) || num(row.amount));
       });
+
+      return buildPlanFactSeriesFromFactMap_(factByDate, startKey, endKey, monthPlanMap, managersFilter);
+    }
+
+    function buildPlanFactSeriesFromFactMap_(factByDate, startKey, endKey, monthPlanMap, managersFilter) {
+      const start = fromDateKey(startKey);
+      const end = fromDateKey(endKey);
+      if (!start || !end) return { points: [], max: 0, planTotal: 0, factTotal: 0 };
 
       const points = [];
       let planAcc = 0;
@@ -1360,7 +1485,7 @@
         const monthlyPlan = num(resolvePlanForMonth(monthPlanMap, monthKey, managersFilter));
         const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
         const dailyPlan = daysInMonth > 0 ? monthlyPlan / daysInMonth : 0;
-        const dailyFact = num(factByDate[dateKey]);
+        const dailyFact = num((factByDate || {})[dateKey]);
 
         planAcc += dailyPlan;
         factAcc += dailyFact;
@@ -1385,6 +1510,53 @@
       };
     }
 
+    function buildPlanFactSeriesCube(startKey, endKey, monthPlanMap, managersFilter, sourceFilter, managerFilter) {
+      const cube = state.baseData && state.baseData.cube;
+      if (!cube || !cube.dates) {
+        // fallback to legacy behavior via raw datasets
+        const data = filterPeriodDataLegacy(startKey, endKey, sourceFilter, managerFilter);
+        return buildPlanFactSeries(data.ordersCompleted, startKey, endKey, monthPlanMap, managersFilter);
+      }
+
+      const src = sourceFilter || 'усього';
+      const mgr = managerFilter || 'усього';
+      const factByDate = {};
+
+      const start = fromDateKey(startKey);
+      const end = fromDateKey(endKey);
+      if (!start || !end) return { points: [], max: 0, planTotal: 0, factTotal: 0 };
+
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const dateKey = toDateKey(d);
+        const day = cube.dates[dateKey];
+        if (!day) continue;
+        const sm = day.sm || {};
+
+        let dailyFact = 0;
+        if (src === 'усього' && mgr === 'усього') {
+          Object.keys(sm).forEach((s) => {
+            const byMgr = sm[s] || {};
+            Object.keys(byMgr).forEach((mm) => { dailyFact += num(byMgr[mm] && byMgr[mm].factSales); });
+          });
+        } else if (src !== 'усього' && mgr === 'усього') {
+          const byMgr = sm[src] || {};
+          Object.keys(byMgr).forEach((mm) => { dailyFact += num(byMgr[mm] && byMgr[mm].factSales); });
+        } else if (src === 'усього' && mgr !== 'усього') {
+          Object.keys(sm).forEach((s) => {
+            const byMgr = sm[s] || {};
+            if (byMgr[mgr]) dailyFact += num(byMgr[mgr].factSales);
+          });
+        } else {
+          const byMgr = sm[src] || {};
+          if (byMgr[mgr]) dailyFact += num(byMgr[mgr].factSales);
+        }
+
+        if (dailyFact) factByDate[dateKey] = dailyFact;
+      }
+
+      return buildPlanFactSeriesFromFactMap_(factByDate, startKey, endKey, monthPlanMap, managersFilter);
+    }
+
     function calcPlanTotalForRange(startKey, endKey, monthPlanMap, managersFilter) {
       const start = fromDateKey(startKey);
       const end = fromDateKey(endKey);
@@ -1405,8 +1577,7 @@
         .filter((s) => s && s !== 'усього');
 
       return sourceList.map((source) => {
-        const data = filterPeriodData(startKey, endKey, source, state.filters.manager);
-        const metrics = computeMetrics(data);
+        const metrics = computeMetricsForRange(startKey, endKey, source, state.filters.manager);
         return { source, metrics };
       }).sort((a, b) => a.source.localeCompare(b.source));
     }
@@ -1419,8 +1590,7 @@
 
       for (let d = new Date(end); d >= start; d.setDate(d.getDate() - 1)) {
         const key = toDateKey(d);
-        const data = filterPeriodData(key, key);
-        const metrics = computeMetrics(data);
+        const metrics = computeMetricsForRange(key, key, state.filters.source, state.filters.manager);
         rows.push({ date: key, metrics });
       }
 
@@ -1432,8 +1602,7 @@
         .filter((m) => m && m !== 'усього');
 
       return managers.map((manager) => {
-        const data = filterPeriodData(startKey, endKey, state.filters.source, manager);
-        const metrics = computeMetrics(data);
+        const metrics = computeMetricsForRange(startKey, endKey, state.filters.source, manager);
         metrics.planSales = calcPlanTotalForRange(startKey, endKey, planMap, [manager]);
         metrics.planPercent = metrics.planSales > 0 ? (metrics.factSales / metrics.planSales) : 0;
         return { manager, metrics: metrics };
