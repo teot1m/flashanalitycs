@@ -1,0 +1,9 @@
+# Files/folders to ignore when pushing to Google Apps Script via clasp
+# See: https://github.com/google/clasp
+
+# Local/Node stuff
+node_modules/
+.DS_Store
+
+# Serverless / backend helpers not meant for Apps Script
+api/**
