@@ -1242,43 +1242,79 @@
         return;
       }
 
-      const lines = [];
-      lines.push('*' + escapeMdV2('🧾 Деталізація по товарах') + '*');
-      lines.push(escapeMdV2('Період: ' + (current.label || (current.start + '…' + current.end))));
-      if (source && source !== 'усього') lines.push(escapeMdV2('Джерело: ' + source));
-      lines.push('');
+      const headerLines = [];
+      headerLines.push('*' + escapeMdV2('🧾 Деталізація по товарах (створені замовлення)') + '*');
+      headerLines.push(escapeMdV2('Період: ' + (current.label || (current.start + '…' + current.end))));
+      if (source && source !== 'усього') headerLines.push(escapeMdV2('Джерело: ' + source));
 
       const managers = Array.isArray(res.managers) ? res.managers : [];
-      managers.forEach((mgr) => {
+
+      const formatManagerBlock = (mgr) => {
         const name = String(mgr.manager || '').trim();
         const t = mgr.totals || {};
+        const lines = [];
         lines.push('*' + escapeMdV2(name) + '*');
-        lines.push('• ' + escapeMdV2('Товарів у створених замовленнях: ') + '🧾' + escapeMdV2(fmtNumber(t.orders)) + ' / 📦' + escapeMdV2(fmtNumber(t.items)) + ' / 💰' + escapeMdV2(fmtMoneyTg(t.amount)) + ' / 💳' + escapeMdV2(fmtMoneyTg(t.paid)));
+        lines.push(escapeMdV2('Всього: ') + '🧾' + escapeMdV2(fmtNumber(t.orders)) + ' | 📦' + escapeMdV2(fmtNumber(t.items)) + ' | 💰' + escapeMdV2(fmtMoneyTg(t.amount)) + ' | 💳' + escapeMdV2(fmtMoneyTg(t.paid)));
 
         const products = Array.isArray(mgr.products) ? mgr.products : [];
+        let idx = 1;
         products.forEach((p) => {
           const label = String(p.product || '').trim();
-          lines.push('• ' + escapeMdV2(label) + ': ' + '🧾' + escapeMdV2(fmtNumber(p.orders)) + ' / 📦' + escapeMdV2(fmtNumber(p.items)) + ' / 💰' + escapeMdV2(fmtMoneyTg(p.amount)) + ' / 💳' + escapeMdV2(fmtMoneyTg(p.paid)));
+          const prefix = (p.chuyka ? '⭐ ' : '') + String(idx) + ') ';
+          lines.push(prefix + escapeMdV2(label));
+          lines.push('   ' + '🧾' + escapeMdV2(fmtNumber(p.orders)) + ' | 📦' + escapeMdV2(fmtNumber(p.items)) + ' | 💰' + escapeMdV2(fmtMoneyTg(p.amount)) + ' | 💳' + escapeMdV2(fmtMoneyTg(p.paid)));
+          idx += 1;
         });
-        lines.push('');
-      });
 
-      const text = lines.join('\n');
+        return lines.join('\n');
+      };
 
-      const sendRes = await fetch(TELEGRAM_SEND_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: USER_ID, text })
-      });
-      const contentType = sendRes.headers && sendRes.headers.get ? String(sendRes.headers.get('content-type') || '') : '';
-      let payload = null;
-      if (contentType.indexOf('application/json') !== -1) {
-        payload = await sendRes.json();
+      const sendTelegramText = async (text) => {
+        const sendRes = await fetch(TELEGRAM_SEND_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: USER_ID, text })
+        });
+        const contentType = sendRes.headers && sendRes.headers.get ? String(sendRes.headers.get('content-type') || '') : '';
+        if (contentType.indexOf('application/json') !== -1) {
+          const payload = await sendRes.json();
+          return !!(payload && payload.ok);
+        }
+        return false;
+      };
+
+      // Telegram limit is 4096 chars; keep margin for MarkdownV2 escaping.
+      const MAX_LEN = 3400;
+      let chunk = headerLines.join('\n') + '\n\n';
+      let sentAny = false;
+
+      for (const mgr of managers) {
+        const block = formatManagerBlock(mgr);
+        const candidate = chunk + block + '\n\n';
+        if (candidate.length > MAX_LEN && chunk.trim().length > 0) {
+          const ok = await sendTelegramText(chunk.trim());
+          if (!ok) {
+            showToast('Помилка вiдправки');
+            return;
+          }
+          sentAny = true;
+          chunk = '*'+ escapeMdV2('🧾 Деталізація (продовження)') + '*\n\n' + block + '\n\n';
+        } else {
+          chunk = candidate;
+        }
       }
-      if (payload && payload.ok) {
+
+      if (chunk.trim().length > 0) {
+        const ok = await sendTelegramText(chunk.trim());
+        if (!ok) {
+          showToast('Помилка вiдправки');
+          return;
+        }
+        sentAny = true;
+      }
+
+      if (sentAny) {
         showToast('Деталізацію вiдправлено в Telegram');
-      } else {
-        showToast('Помилка вiдправки');
       }
     }
 
