@@ -1264,8 +1264,8 @@
         let idx = 1;
         products.forEach((p) => {
           const label = String(p.product || '').trim();
-          const prefix = (p.chuyka ? '⭐ ' : '') + String(idx) + '. ';
-          lines.push(prefix + escapeMdV2(label));
+          const prefix = (p.chuyka ? '⭐ ' : '') + String(idx) + ') ';
+          lines.push(escapeMdV2(prefix + label));
           lines.push('   ' + '🧾' + escapeMdV2(fmtNumber(p.orders)) + ' / 📦' + escapeMdV2(fmtNumber(p.items)) + ' / 💰' + escapeMdV2(fmtMoneyTg(p.amount)) + ' / 💳' + escapeMdV2(fmtMoneyTg(p.paid)));
           idx += 1;
         });
