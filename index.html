@@ -1264,7 +1264,7 @@
         let idx = 1;
         products.forEach((p) => {
           const label = String(p.product || '').trim();
-          const prefix = (p.chuyka ? '⭐ ' : '') + String(idx) + ') ';
+          const prefix = (p.chuyka ? '⭐ ' : '') + String(idx) + '. ';
           lines.push(prefix + escapeMdV2(label));
           lines.push('   ' + '🧾' + escapeMdV2(fmtNumber(p.orders)) + ' / 📦' + escapeMdV2(fmtNumber(p.items)) + ' / 💰' + escapeMdV2(fmtMoneyTg(p.amount)) + ' / 💳' + escapeMdV2(fmtMoneyTg(p.paid)));
           idx += 1;
@@ -2651,7 +2651,32 @@
     }
 
     function showToast(msg) {
-      document.getElementById('toastMessage').textContent = msg;
+      state.lastToast = String(msg || '');
+      const el = document.getElementById('toastMessage');
+      el.textContent = state.lastToast;
+      // Make error toasts clickable-to-copy.
+      const isErr = state.lastToast.startsWith('Помилка') || state.lastToast.startsWith('Помилка ');
+      el.style.cursor = isErr ? 'copy' : 'default';
+      el.title = isErr ? 'Натисни, щоб скопіювати текст помилки' : '';
+
+      if (!el.dataset.copyBound) {
+        el.addEventListener('click', async () => {
+          const text = String(state.lastToast || '');
+          const isError = text.startsWith('Помилка') || text.startsWith('Помилка ');
+          if (!isError) return;
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(text);
+              el.textContent = 'Скопійовано: ' + text;
+              setTimeout(() => { el.textContent = text; }, 1600);
+            }
+          } catch (e) {
+            // fallback: no clipboard permission
+          }
+        });
+        el.dataset.copyBound = '1';
+      }
+
       if (toastInstance && typeof toastInstance.show === 'function') {
         toastInstance.show();
       }
