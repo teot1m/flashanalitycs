@@ -2863,6 +2863,14 @@
       if (!res || res.error) throw new Error(res && res.error ? res.error : 'plans_save_failed');
 
       showToast('Плани збережено');
+
+      // Close modal after save
+      try {
+        const modalEl = document.getElementById('plansModal');
+        const modal = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.hide();
+      } catch (e) {}
+
       await loadPlansForSelectedMonth();
       await ensureDataLoaded(true);
       renderFromCache();
