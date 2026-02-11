@@ -175,6 +175,20 @@
       gap: 8px;
     }
 
+    /* Ensure modals appear above the topline (topline has high z-index) */
+    .modal-backdrop { z-index: 3990 !important; }
+    .modal { z-index: 4000 !important; }
+
+    /* Plans controls row: month select + reload on ONE row on mobile */
+    .plans-controls {
+      display: flex;
+      gap: 8px;
+      align-items: end;
+      flex-wrap: nowrap;
+    }
+    .plans-controls .plans-month-wrap { flex: 1 1 auto; min-width: 0; }
+    .plans-controls .plans-reload-wrap { flex: 0 0 auto; }
+
     .field-label {
       display: block;
       font-size: 11px;
@@ -824,13 +838,13 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <div class="row g-2 align-items-end mb-3">
-              <div class="col-12 col-md-6">
+            <div class="plans-controls mb-3">
+              <div class="plans-month-wrap">
                 <label class="field-label">Місяць (поточний рік)</label>
                 <select class="field-select" id="plansMonth"></select>
               </div>
-              <div class="col-12 col-md-6 d-flex gap-2 justify-content-md-end">
-                <button class="btn btn-outline-secondary" id="plansReload" type="button">Оновити</button>
+              <div class="plans-reload-wrap">
+                <button class="btn btn-outline-secondary" id="plansReload" type="button" style="min-height:44px; border-radius:12px; font-weight:800;">Оновити</button>
               </div>
             </div>
 
