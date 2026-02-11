@@ -1161,9 +1161,25 @@
 
       updateRangeTexts();
 
-      const ranges = state.baseData.ranges || {};
-      const current = ranges.current || {};
-      const previous = ranges.previous || {};
+      // Use the actually selected range from UI; do not rely on backend "ranges" which may be month-based.
+      const current = {
+        start: state.range.start,
+        end: state.range.end,
+        label: `${formatDateLong(state.range.start)} — ${formatDateLong(state.range.end)}`
+      };
+
+      // Previous period: same length immediately before current.start
+      const curStartDate = fromDateKey(current.start);
+      const curEndDate = fromDateKey(current.end);
+      const daysLen = (curStartDate && curEndDate) ? (Math.round((curEndDate - curStartDate) / 86400000) + 1) : 1;
+      const prevEndDate = curStartDate ? new Date(curStartDate.getTime() - 86400000) : null;
+      const prevStartDate = prevEndDate ? new Date(prevEndDate.getTime() - (Math.max(1, daysLen) - 1) * 86400000) : null;
+
+      const previous = {
+        start: prevStartDate ? toDateKey(prevStartDate) : current.start,
+        end: prevEndDate ? toDateKey(prevEndDate) : current.end,
+        label: prevStartDate && prevEndDate ? `${formatDateLong(toDateKey(prevStartDate))} — ${formatDateLong(toDateKey(prevEndDate))}` : ''
+      };
 
       const cacheKey = `${state.dataKey}|${state.filters.source}|${state.filters.manager}|${state.access.role}`;
       if (state.renderCache && state.renderCache.has(cacheKey)) {
