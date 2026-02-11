@@ -179,6 +179,14 @@
     .modal-backdrop { z-index: 3990 !important; }
     .modal { z-index: 4000 !important; }
 
+    /* On mobile make modal body scrollable; on desktop show full content */
+    @media (max-width: 575px) {
+      #plansModal .modal-body {
+        max-height: calc(100vh - 220px);
+        overflow: auto;
+      }
+    }
+
     /* Plans controls row: month select + reload on ONE row on mobile */
     .plans-controls {
       display: flex;
@@ -840,7 +848,7 @@
 
     <!-- Plans modal (heads only) -->
     <div class="modal fade" id="plansModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Плани продажів</h5>
@@ -869,14 +877,14 @@
                 <tbody id="plansTbody"></tbody>
               </table>
             </div>
-            <div class="d-flex justify-content-end mt-2">
-              <button class="btn btn-outline-dark" id="plansAddRow" type="button" title="Додати менеджера">+</button>
-            </div>
             <div class="small text-muted mt-2" id="plansHint"></div>
           </div>
-          <div class="modal-footer">
-            <button class="btn btn-light border" type="button" data-bs-dismiss="modal">Закрити</button>
-            <button class="btn btn-primary" id="plansSave" type="button">Зберегти</button>
+          <div class="modal-footer" style="justify-content: space-between;">
+            <button class="btn btn-outline-dark" id="plansAddRow" type="button" title="Додати менеджера">+</button>
+            <div class="d-flex gap-2">
+              <button class="btn btn-light border" type="button" data-bs-dismiss="modal">Закрити</button>
+              <button class="btn btn-primary" id="plansSave" type="button">Зберегти</button>
+            </div>
           </div>
         </div>
       </div>
@@ -2852,7 +2860,9 @@
           <tr data-kind="existing" data-idx="${idx}">
             <td><strong>${escapeHtml(p.manager || '—')}</strong></td>
             <td><input class="form-control form-control-sm plan-amount" inputmode="numeric" value="${escapeHtml(String(p.plan || ''))}" /></td>
-            <td></td>
+            <td class="text-end">
+              <button class="btn btn-sm btn-outline-danger plan-delete" type="button">Видалити</button>
+            </td>
           </tr>
         `;
       }).join('');
@@ -2860,6 +2870,30 @@
       if (!rows.length) {
         tbody.innerHTML = `<tr><td colspan="3" class="text-muted">Немає планів за цей місяць.</td></tr>`;
       }
+
+      // Bind delete buttons
+      tbody.querySelectorAll('button.plan-delete').forEach((btn) => {
+        if (btn.dataset.bound === '1') return;
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', () => {
+          const tr = btn.closest('tr');
+          if (!tr) return;
+          const isDel = tr.dataset.delete === '1';
+          if (isDel) {
+            delete tr.dataset.delete;
+            tr.style.opacity = '1';
+            btn.textContent = 'Видалити';
+            btn.classList.add('btn-outline-danger');
+            btn.classList.remove('btn-outline-secondary');
+          } else {
+            tr.dataset.delete = '1';
+            tr.style.opacity = '0.45';
+            btn.textContent = 'Скасувати';
+            btn.classList.remove('btn-outline-danger');
+            btn.classList.add('btn-outline-secondary');
+          }
+        });
+      });
     }
 
     function addPlanRow() {
@@ -2906,6 +2940,11 @@
       const existingRows = Array.from(tbody.querySelectorAll('tr[data-kind="existing"]'));
       existingRows.forEach((tr, i) => {
         const manager = (state.plans.existing[i] && state.plans.existing[i].manager) ? state.plans.existing[i].manager : '';
+        const isDelete = tr.dataset.delete === '1';
+        if (isDelete) {
+          if (manager) items.push({ manager, remove: true });
+          return;
+        }
         const amountStr = tr.querySelector('.plan-amount')?.value || '';
         const plan = Number(String(amountStr).replace(/\s+/g, '').replace(',', '.'));
         if (manager && Number.isFinite(plan)) items.push({ manager, plan });
