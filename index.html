@@ -700,6 +700,9 @@
         <button class="btn btn-sm btn-outline-dark" id="sendTelegramProductsBtn" type="button" title="Деталізація по товарах" style="display:none; position:relative; z-index:20;">
           <i class="bi bi-list-check"></i> <span class="d-none d-md-inline">Товари по менеджерах</span>
         </button>
+        <button class="btn btn-sm btn-outline-primary" id="editPlansBtn" type="button" title="Плани продажів" style="display:none; position:relative; z-index:20;">
+          <i class="bi bi-pencil-square"></i> <span class="d-none d-md-inline">Плани</span>
+        </button>
         <button class="btn btn-sm btn-light border" id="forceReloadBtn" title="Оновити"><i
             class="bi bi-arrow-clockwise"></i></button>
       </div>
@@ -766,6 +769,48 @@
       </div>
     </div>
 
+    <!-- Plans modal (heads only) -->
+    <div class="modal fade" id="plansModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Плани продажів</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-2 align-items-end mb-3">
+              <div class="col-12 col-md-6">
+                <label class="field-label">Місяць (поточний рік)</label>
+                <select class="field-select" id="plansMonth"></select>
+              </div>
+              <div class="col-12 col-md-6 d-flex gap-2 justify-content-md-end">
+                <button class="btn btn-outline-secondary" id="plansReload" type="button">Оновити</button>
+                <button class="btn btn-dark" id="plansAddRow" type="button">+ Додати менеджера</button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-sm align-middle">
+                <thead>
+                  <tr>
+                    <th style="min-width:220px;">Менеджер</th>
+                    <th style="min-width:160px;">План (грн)</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="plansTbody"></tbody>
+              </table>
+            </div>
+            <div class="small text-muted" id="plansHint"></div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-light border" type="button" data-bs-dismiss="modal">Закрити</button>
+            <button class="btn btn-primary" id="plansSave" type="button">Зберегти</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index:1080;">
       <div id="liveToast" class="toast text-bg-dark border-0" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="d-flex">
@@ -823,7 +868,12 @@
       chartSeries: null,
       debugLines: [],
       renderCache: new Map(),
-      renderCacheKey: ''
+      renderCacheKey: '',
+      plans: {
+        month: '',
+        existing: [],
+        availableManagers: [],
+      }
     };
 
     let toastInstance;
@@ -860,6 +910,13 @@
       document.getElementById('forceReloadBtn').addEventListener('click', () => hardRefresh().catch(handleUiError));
       document.getElementById('sendTelegramBtn').addEventListener('click', () => sendTelegramReport().catch(handleUiError));
       document.getElementById('sendTelegramProductsBtn').addEventListener('click', () => sendTelegramProductsReport().catch(handleUiError));
+      document.getElementById('editPlansBtn').addEventListener('click', () => openPlansModal().catch(handleUiError));
+
+      document.getElementById('plansReload').addEventListener('click', () => loadPlansForSelectedMonth().catch(handleUiError));
+      document.getElementById('plansMonth').addEventListener('change', () => loadPlansForSelectedMonth().catch(handleUiError));
+      document.getElementById('plansAddRow').addEventListener('click', () => addPlanRow());
+      document.getElementById('plansSave').addEventListener('click', () => savePlans().catch(handleUiError));
+
       document.getElementById('applyFiltersBtn').addEventListener('click', () => {
         renderFromCache();
         if (window.innerWidth < 992) toggleFiltersPanel(false);
@@ -937,9 +994,11 @@
         state.filters.manager = res.manager || 'усього';
         document.getElementById('sendTelegramBtn').style.display = 'none';
         document.getElementById('sendTelegramProductsBtn').style.display = 'none';
+        document.getElementById('editPlansBtn').style.display = 'none';
       } else {
         document.getElementById('sendTelegramBtn').style.display = 'inline-flex';
         document.getElementById('sendTelegramProductsBtn').style.display = 'inline-flex';
+        document.getElementById('editPlansBtn').style.display = 'inline-flex';
       }
     }
 
@@ -2648,6 +2707,150 @@
       showToast('Помилка: ' + (err && err.message ? err.message : String(err)));
       pushDebug('UI error: ' + String(err));
       showDebugIfNeeded();
+    }
+
+    // -------------------------
+    // Plans UI (Керівник only)
+    // -------------------------
+
+    function monthOptionsForCurrentYear_() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const out = [];
+      for (let m = 0; m < 12; m++) {
+        const d = new Date(y, m, 1);
+        const label = d.toLocaleDateString('uk-UA', { month: 'long' });
+        const value = `${y}-${String(m + 1).padStart(2, '0')}-01`;
+        out.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
+      }
+      return out;
+    }
+
+    async function openPlansModal() {
+      if (!state.access || state.access.role !== 'Керівник') {
+        showToast('Недостатньо прав');
+        return;
+      }
+
+      const select = document.getElementById('plansMonth');
+      if (!select.dataset.inited) {
+        const opts = monthOptionsForCurrentYear_();
+        select.innerHTML = opts.map(o => `<option value="${o.value}">${escapeHtml(o.label)}</option>`).join('');
+        const now = new Date();
+        const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+        select.value = current;
+        select.dataset.inited = '1';
+      }
+
+      const modalEl = document.getElementById('plansModal');
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+
+      await loadPlansForSelectedMonth();
+    }
+
+    async function loadPlansForSelectedMonth() {
+      const month = document.getElementById('plansMonth').value;
+      const hint = document.getElementById('plansHint');
+      hint.textContent = 'Завантаження...';
+
+      const res = await apiGet({ action: 'getSalesPlans', userId: USER_ID, month });
+      if (!res || res.error) throw new Error(res && res.error ? res.error : 'plans_load_failed');
+
+      state.plans.month = res.month;
+      state.plans.existing = res.plans || [];
+      state.plans.availableManagers = res.availableManagers || [];
+
+      renderPlansTable();
+      hint.textContent = '';
+    }
+
+    function renderPlansTable() {
+      const tbody = document.getElementById('plansTbody');
+      const rows = (state.plans.existing || []).slice();
+
+      tbody.innerHTML = rows.map((p, idx) => {
+        return `
+          <tr data-kind="existing" data-idx="${idx}">
+            <td><strong>${escapeHtml(p.manager || '—')}</strong></td>
+            <td><input class="form-control form-control-sm plan-amount" inputmode="numeric" value="${escapeHtml(String(p.plan || ''))}" /></td>
+            <td></td>
+          </tr>
+        `;
+      }).join('');
+
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="3" class="text-muted">Немає планів за цей місяць.</td></tr>`;
+      }
+    }
+
+    function addPlanRow() {
+      const tbody = document.getElementById('plansTbody');
+      const options = (state.plans.availableManagers || []).slice();
+      if (!options.length) {
+        showToast('Немає доступних менеджерів для додавання');
+        return;
+      }
+
+      if (tbody.querySelectorAll('tr').length === 1 && tbody.textContent.includes('Немає планів')) {
+        tbody.innerHTML = '';
+      }
+
+      const optHtml = options.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+      const tr = document.createElement('tr');
+      tr.dataset.kind = 'new';
+      tr.innerHTML = `
+        <td><select class="form-select form-select-sm plan-manager">${optHtml}</select></td>
+        <td><input class="form-control form-control-sm plan-amount" inputmode="numeric" placeholder="0" /></td>
+        <td class="text-end"><button class="btn btn-sm btn-outline-danger">Видалити</button></td>
+      `;
+      tr.querySelector('button').addEventListener('click', () => tr.remove());
+      tbody.appendChild(tr);
+
+      const selected = tr.querySelector('select').value;
+      state.plans.availableManagers = state.plans.availableManagers.filter(m => m !== selected);
+      tr.querySelector('select').addEventListener('change', (e) => {
+        state.plans.availableManagers = state.plans.availableManagers.filter(m => m !== e.target.value);
+      });
+    }
+
+    async function savePlans() {
+      const month = document.getElementById('plansMonth').value;
+      const tbody = document.getElementById('plansTbody');
+
+      const items = [];
+
+      const existingRows = Array.from(tbody.querySelectorAll('tr[data-kind="existing"]'));
+      existingRows.forEach((tr, i) => {
+        const manager = (state.plans.existing[i] && state.plans.existing[i].manager) ? state.plans.existing[i].manager : '';
+        const amountStr = tr.querySelector('.plan-amount')?.value || '';
+        const plan = Number(String(amountStr).replace(/\s+/g, '').replace(',', '.'));
+        if (manager && Number.isFinite(plan)) items.push({ manager, plan });
+      });
+
+      const newRows = Array.from(tbody.querySelectorAll('tr[data-kind="new"]'));
+      newRows.forEach((tr) => {
+        const manager = tr.querySelector('.plan-manager')?.value || '';
+        const amountStr = tr.querySelector('.plan-amount')?.value || '';
+        const plan = Number(String(amountStr).replace(/\s+/g, '').replace(',', '.'));
+        if (manager && Number.isFinite(plan)) items.push({ manager, plan });
+      });
+
+      if (!items.length) {
+        showToast('Немає даних для збереження');
+        return;
+      }
+
+      const payload = btoa(unescape(encodeURIComponent(JSON.stringify(items))))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+
+      const res = await apiGet({ action: 'saveSalesPlans', userId: USER_ID, month, payload });
+      if (!res || res.error) throw new Error(res && res.error ? res.error : 'plans_save_failed');
+
+      showToast('Плани збережено');
+      await loadPlansForSelectedMonth();
+      await ensureDataLoaded(true);
+      renderFromCache();
     }
 
     function showToast(msg) {
