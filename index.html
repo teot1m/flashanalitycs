@@ -346,7 +346,17 @@
       word-break: keep-all;
       max-width: 100%;
       display: block;
+      text-overflow: ellipsis;
+      overflow: hidden;
     }
+
+    /* Auto-shrink big numbers so they fit */
+    .kpi-value.shrink-1 { font-size: clamp(14px, 3.9vw, 26px); }
+    .kpi-value.shrink-2 { font-size: clamp(12px, 3.4vw, 22px); }
+    .kpi-value.shrink-3 { font-size: clamp(11px, 3.0vw, 18px); }
+
+    /* Center common KPI cards (totals) */
+    .kpi-card.kpi-center { text-align: center; }
 
     .kpi-value>* {
       white-space: nowrap;
@@ -1101,6 +1111,7 @@
           document.getElementById('appContent').innerHTML = cached.html;
           initPlanChartDayInfo();
           initManagersProductsDetails();
+          applyKpiAutoFit_();
           return;
         }
       }
@@ -1134,6 +1145,7 @@
       document.getElementById('appContent').innerHTML = html;
       initPlanChartDayInfo();
       initManagersProductsDetails();
+      applyKpiAutoFit_();
 
       if (state.renderCache) {
         if (state.renderCache.size > 12) state.renderCache.clear();
@@ -1831,13 +1843,13 @@
         <div class="panel-card p-3">
           <div class="section-title">Основні показники</div>
           <div class="kpi-grid kpi-grid-main">
-            ${metricCard('Всього користувачів', fmtNumber(cm.visitorsTotal), trendHtml(cm.visitorsTotal, pm.visitorsTotal, true), 'span 3')}
-            ${metricCard('Нові користувачі', fmtNumber(cm.visitorsNew), trendHtml(cm.visitorsNew, pm.visitorsNew, true), 'span 3')}
-            ${metricCard('Повторні користувачі', fmtNumber(cm.visitorsReturning), trendHtml(cm.visitorsReturning, pm.visitorsReturning, true), 'span 3')}
-            ${metricCard('Середній чек', fmtMoney(cm.avgCheck), trendHtml(cm.avgCheck, pm.avgCheck, true), 'span 3')}
+            ${metricCard('Всього користувачів', fmtNumber(cm.visitorsTotal), trendHtml(cm.visitorsTotal, pm.visitorsTotal, true), 'span 3', '', 'kpi-center')}
+            ${metricCard('Нові користувачі', fmtNumber(cm.visitorsNew), trendHtml(cm.visitorsNew, pm.visitorsNew, true), 'span 3', '', 'kpi-center')}
+            ${metricCard('Повторні користувачі', fmtNumber(cm.visitorsReturning), trendHtml(cm.visitorsReturning, pm.visitorsReturning, true), 'span 3', '', 'kpi-center')}
+            ${metricCard('Середній чек', fmtMoney(cm.avgCheck), trendHtml(cm.avgCheck, pm.avgCheck, true), 'span 3', '', 'kpi-center')}
 
-            ${metricCard('План продажів', `<span title="План: ${fmtMoney(cm.planSales)}">${fmtMoney(cm.planSales)}</span>`, trendHtml(cm.planSales, pm.planSales, true), 'span 4')}
-            ${metricCard('Факт продажів', `<span title="Факт: ${fmtMoney(cm.factSales)}">${fmtMoney(cm.factSales)}</span>`, trendHtml(cm.factSales, pm.factSales, true), 'span 4')}
+            ${metricCard('План продажів', `<span title="План: ${fmtMoney(cm.planSales)}">${fmtMoney(cm.planSales)}</span>`, trendHtml(cm.planSales, pm.planSales, true), 'span 4', '', 'kpi-center')}
+            ${metricCard('Факт продажів', `<span title="Факт: ${fmtMoney(cm.factSales)}">${fmtMoney(cm.factSales)}</span>`, trendHtml(cm.factSales, pm.factSales, true), 'span 4', '', 'kpi-center')}
             ${metricCard('Виконання плану', fmtPercent(cm.planPercent), trendHtml(cm.planPercent, pm.planPercent, true), 'span 4', `
               <div class="plan-progress"><span style="width:${planBarWidth}%;background:${planBarColor};"></span></div>
             `, 'kpi-mobile-full')}
@@ -1921,10 +1933,11 @@
     }
 
     function metricCard(label, value, trend, span, extra, className) {
+      const cn = String(className || '');
       return `
-        <div class="kpi-card ${className || ''}" style="grid-column:${span};">
+        <div class="kpi-card ${cn}" style="grid-column:${span};">
           <div class="kpi-label">${label}</div>
-          <div class="kpi-value">${value}</div>
+          <div class="kpi-value" data-kpi-value="1">${value}</div>
           ${trend || '<div class="trend neutral">—</div>'}
           ${extra || ''}
         </div>
@@ -2874,6 +2887,20 @@
       await loadPlansForSelectedMonth();
       await ensureDataLoaded(true);
       renderFromCache();
+    }
+
+    function applyKpiAutoFit_() {
+      // Shrink large KPI values to fit on mobile cards.
+      const nodes = document.querySelectorAll('[data-kpi-value]');
+      nodes.forEach((el) => {
+        const raw = (el.textContent || '').trim();
+        // Count only digits (ignore spaces, slashes, currency symbols)
+        const digits = raw.replace(/\D+/g, '').length;
+        el.classList.remove('shrink-1', 'shrink-2', 'shrink-3');
+        if (digits >= 13) el.classList.add('shrink-3');
+        else if (digits >= 10) el.classList.add('shrink-2');
+        else if (digits >= 8) el.classList.add('shrink-1');
+      });
     }
 
     function showToast(msg) {
