@@ -2089,7 +2089,15 @@
 
       const info = document.getElementById('chartPointInfo');
       if (!info) return;
-      info.innerHTML = `<strong>${escapeHtml(point.label)}</strong> · План: <strong>${fmtMoney(plan)}</strong> · Факт: <strong>${fmtMoney(fact)}</strong> · <strong>${fmtPercent(pct)}</strong>`;
+
+      const isMobile = window.innerWidth <= 575;
+      info.innerHTML = isMobile
+        ? `<strong>${escapeHtml(point.label)}</strong><br>` +
+          `<span class="text-muted">План:</span> <strong>${fmtMoney(plan)}</strong><br>` +
+          `<span class="text-muted">Факт:</span> <strong>${fmtMoney(fact)}</strong><br>` +
+          `<strong>${fmtPercent(pct)}</strong>`
+        : `<strong>${escapeHtml(point.label)}</strong> · План: <strong>${fmtMoney(plan)}</strong> · Факт: <strong>${fmtMoney(fact)}</strong> · <strong>${fmtPercent(pct)}</strong>`;
+
       info.classList.remove('hidden');
     }
 
