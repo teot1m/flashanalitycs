@@ -785,7 +785,6 @@
               </div>
               <div class="col-12 col-md-6 d-flex gap-2 justify-content-md-end">
                 <button class="btn btn-outline-secondary" id="plansReload" type="button">Оновити</button>
-                <button class="btn btn-dark" id="plansAddRow" type="button">+ Додати менеджера</button>
               </div>
             </div>
 
@@ -801,7 +800,10 @@
                 <tbody id="plansTbody"></tbody>
               </table>
             </div>
-            <div class="small text-muted" id="plansHint"></div>
+            <div class="d-flex justify-content-end mt-2">
+              <button class="btn btn-outline-dark" id="plansAddRow" type="button" title="Додати менеджера">+</button>
+            </div>
+            <div class="small text-muted mt-2" id="plansHint"></div>
           </div>
           <div class="modal-footer">
             <button class="btn btn-light border" type="button" data-bs-dismiss="modal">Закрити</button>
@@ -2796,7 +2798,10 @@
         tbody.innerHTML = '';
       }
 
-      const optHtml = options.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+      const optHtml = ['<option value="">— Оберіть менеджера —</option>']
+        .concat(options.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`))
+        .join('');
+
       const tr = document.createElement('tr');
       tr.dataset.kind = 'new';
       tr.innerHTML = `
@@ -2804,13 +2809,15 @@
         <td><input class="form-control form-control-sm plan-amount" inputmode="numeric" placeholder="0" /></td>
         <td class="text-end"><button class="btn btn-sm btn-outline-danger">Видалити</button></td>
       `;
+
       tr.querySelector('button').addEventListener('click', () => tr.remove());
       tbody.appendChild(tr);
 
-      const selected = tr.querySelector('select').value;
-      state.plans.availableManagers = state.plans.availableManagers.filter(m => m !== selected);
+      // Do NOT preselect a manager. Reserve manager only after user selects it.
       tr.querySelector('select').addEventListener('change', (e) => {
-        state.plans.availableManagers = state.plans.availableManagers.filter(m => m !== e.target.value);
+        const val = String(e.target.value || '').trim();
+        if (!val) return;
+        state.plans.availableManagers = state.plans.availableManagers.filter(m => m !== val);
       });
     }
 
